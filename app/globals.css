@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: "Quicksand", sans-serif !important;
+  background-color: #f3efee;
+  color: #3f3b4f;
+  --pastel-bg: #f3efee;
+  --pastel-surface: #ebe5e8;
+  --pastel-primary: #7f7396;
+  --pastel-secondary: #89a8a2;
+  --pastel-accent: #c692a4;
+  --pastel-text: #3f3b4f;
+  --pastel-border: #cbbfcf;
+}
+
+@font-face {
+  font-family: "Quicksand";
+  src: url("../public/static/Quicksand-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+.navigation header {
+  max-width: none;
+}
+
+body {
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  background: #f3efee;
+  color: var(--pastel-text);
+  overflow-x: hidden;
+}
+
+html {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
