@@ -1,5 +1,8 @@
+import type {
+  ConfirmModalRef,
+  ConfirmModalVariant,
+} from "@/lib/components/ConfirmModal";
 import { useCallback, useRef } from "react";
-import type { ConfirmModalRef, ConfirmModalVariant } from "@/lib/components/ConfirmModal";
 
 export type ConfirmDestructiveOptions = {
   title: string;
@@ -17,17 +20,20 @@ export type ConfirmDestructiveOptions = {
 export function useConfirmDestructive() {
   const confirmModalRef = useRef<ConfirmModalRef>(null);
 
-  const confirmDestructive = useCallback(async (opts: ConfirmDestructiveOptions) => {
-    const result = await confirmModalRef.current?.openModal({
-      title: opts.title,
-      message: opts.message,
-      confirmText: opts.confirmText ?? "Confirmar",
-      cancelText: opts.cancelText ?? "Cancelar",
-      variant: opts.variant ?? "danger",
-      onConfirm: opts.action,
-    });
-    return result === true;
-  }, []);
+  const confirmDestructive = useCallback(
+    async (opts: ConfirmDestructiveOptions) => {
+      const result = await confirmModalRef.current?.openModal({
+        title: opts.title,
+        message: opts.message,
+        confirmText: opts.confirmText ?? "Confirmar",
+        cancelText: opts.cancelText ?? "Cancelar",
+        variant: opts.variant ?? "danger",
+        onConfirm: opts.action,
+      });
+      return result === true;
+    },
+    [],
+  );
 
   return { confirmModalRef, confirmDestructive };
 }

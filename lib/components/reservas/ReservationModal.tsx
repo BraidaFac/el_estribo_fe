@@ -1,6 +1,8 @@
 "use client";
 
 import { useReservationFlow } from "@/lib/hooks/useReservationFlow";
+import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
+import { formatApiDateForUi } from "@/lib/utils/formatApiDate";
 import {
   Button,
   Input,
@@ -14,8 +16,6 @@ import {
 } from "@heroui/react";
 import { toast } from "sonner";
 import { PantalonSelect } from "./PantalonSelect";
-import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
-import { formatApiDateForUi } from "@/lib/utils/formatApiDate";
 
 type ReservationModalProps = {
   isOpen: boolean;
@@ -39,6 +39,7 @@ export function ReservationModal({
     isBootstrapLoading,
     isSubmitting,
     loadError,
+    validacionFechaError,
     fieldErrors,
     canSubmit,
     submit,
@@ -102,6 +103,19 @@ export function ReservationModal({
                 {loadError && (
                   <div className="rounded border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">
                     {loadError}
+                  </div>
+                )}
+                {(validacionFechaError) && (
+                  <div
+                    className={
+                      validacionFechaError
+                        ? "rounded border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700"
+                        : "rounded border border-pastel-border bg-pastel-soft p-2 text-sm text-pastel-text/80"
+                    }
+                    role={validacionFechaError ? "alert" : "status"}
+                  >
+                    {validacionFechaError ??
+                      "Comprobando que la fecha sea factible con medición, modista y días hábiles…"}
                   </div>
                 )}
 

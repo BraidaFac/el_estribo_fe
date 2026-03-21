@@ -2,10 +2,10 @@
 
 import { PrendaCrudPage } from "@/lib/components/catalogos/PrendaCrudPage";
 import {
-  actualizarPantalon,
-  crearPantalon,
-  eliminarPantalon,
-  listarPantalones,
+    actualizarPantalon,
+    crearPantalon,
+    eliminarPantalon,
+    listarPantalones,
 } from "@/lib/services/v2";
 
 export default function PantalonesPage() {

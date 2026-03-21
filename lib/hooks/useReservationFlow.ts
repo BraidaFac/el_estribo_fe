@@ -43,6 +43,8 @@ export function useReservationFlow({
   const [isBootstrapLoading, setIsBootstrapLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [validacionFechaError, setValidacionFechaError] = useState<string | null>(null);
+  const [isValidandoFecha, setIsValidandoFecha] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<ReservationFieldErrors>({});
   const [hasTriedSubmit, setHasTriedSubmit] = useState(false);
 
@@ -56,7 +58,9 @@ export function useReservationFlow({
       !!form.clienteDni.trim() &&
       !!form.clienteNombre.trim() &&
       Object.keys(fieldErrors).length === 0 &&
-      !isSubmitting
+      !isSubmitting &&
+      !isValidandoFecha &&
+      !validacionFechaError
     );
   }, [
     fechaReserva,
@@ -64,13 +68,17 @@ export function useReservationFlow({
     form.clienteDni,
     form.clienteNombre,
     isSubmitting,
+    isValidandoFecha,
     sacoId,
+    validacionFechaError,
   ]);
 
   const reset = useCallback(() => {
     setForm(INITIAL_FORM);
     setPantalones([]);
     setLoadError(null);
+    setValidacionFechaError(null);
+    setIsValidandoFecha(false);
     setFieldErrors({});
     setHasTriedSubmit(false);
     setIsSubmitting(false);
@@ -103,6 +111,51 @@ export function useReservationFlow({
     setFieldErrors({});
     setHasTriedSubmit(false);
   }, [isOpen, fechaReserva, sacoId]);
+
+  useEffect(() => {
+    if (!isOpen || !sacoId || !fechaReserva) {
+      setValidacionFechaError(null);
+      setIsValidandoFecha(false);
+      return;
+    }
+    const todayKey = format(new Date(), "yyyy-MM-dd");
+    if (fechaReserva < todayKey) {
+      setValidacionFechaError(
+        "No se pueden crear reservas en fechas anteriores al dia de hoy",
+      );
+      setIsValidandoFecha(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsValidandoFecha(true);
+    setValidacionFechaError(null);
+    void (async () => {
+      try {
+        await validarReservaV2({
+          sacoId,
+          pantalonId: form.pantalonId,
+          fechaReserva,
+          requiereModista: true,
+        });
+        if (!cancelled) {
+          setValidacionFechaError(null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setValidacionFechaError(getUserFacingErrorMessage(error));
+        }
+      } finally {
+        if (!cancelled) {
+          setIsValidandoFecha(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, sacoId, fechaReserva, form.pantalonId]);
 
   const validateForm = useCallback((): ReservationFieldErrors => {
     const errors: ReservationFieldErrors = {};
@@ -187,6 +240,8 @@ export function useReservationFlow({
     isBootstrapLoading,
     isSubmitting,
     loadError,
+    validacionFechaError,
+    isValidandoFecha,
     fieldErrors,
     canSubmit,
     loadBootstrapData,

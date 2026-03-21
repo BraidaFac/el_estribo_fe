@@ -2,26 +2,26 @@
 
 import ConfirmModal from "@/lib/components/ConfirmModal";
 import { MedicionesReservaModal } from "@/lib/components/medidas/MedicionesReservaModal";
-import { AgendaMedicion, EstadoAgendaMedicion } from "@/lib/domain/reservas/types";
-import { getEstadoAgendaMedicionLabel } from "@/lib/domain/reservas/labels";
-import {
-  actualizarEstadoAgendaMedicion,
-  listarAgendaMediciones,
-} from "@/lib/services/v2";
-import { useConfirmDestructive } from "@/lib/hooks/useConfirmDestructive";
 import { ApiDateField } from "@/lib/components/ui/ApiDateField";
+import { getEstadoAgendaMedicionLabel } from "@/lib/domain/reservas/labels";
+import { AgendaMedicion, EstadoAgendaMedicion } from "@/lib/domain/reservas/types";
+import { useConfirmDestructive } from "@/lib/hooks/useConfirmDestructive";
+import {
+    actualizarEstadoAgendaMedicion,
+    listarAgendaMediciones,
+} from "@/lib/services/v2";
 import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
 import { formatApiDateTimeForUi } from "@/lib/utils/formatApiDate";
 import { TABLE_HEADER_CLASS } from "@/lib/utils/uiStyles";
 import {
-  Button,
-  Spinner,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
+    Button,
+    Spinner,
+    Table,
+    TableBody,
+    TableCell,
+    TableColumn,
+    TableHeader,
+    TableRow,
 } from "@heroui/react";
 import { addMonths, format } from "date-fns";
 import { useCallback, useEffect, useState } from "react";

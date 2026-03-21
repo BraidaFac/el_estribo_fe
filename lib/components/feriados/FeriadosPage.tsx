@@ -2,11 +2,6 @@
 
 import ConfirmModal from "@/lib/components/ConfirmModal";
 import { useConfirmDestructive } from "@/lib/hooks/useConfirmDestructive";
-import {
-  ACTION_BUTTON_BASE_CLASS,
-  ACTION_BUTTON_CLASSES,
-  TABLE_HEADER_CLASS,
-} from "@/lib/utils/uiStyles";
 import type { FeriadoV2 } from "@/lib/services/v2/feriados-v2.service";
 import {
   actualizarFeriado,
@@ -14,6 +9,11 @@ import {
   eliminarFeriado,
   listarFeriados,
 } from "@/lib/services/v2/feriados-v2.service";
+import {
+  ACTION_BUTTON_BASE_CLASS,
+  ACTION_BUTTON_CLASSES,
+  TABLE_HEADER_CLASS,
+} from "@/lib/utils/uiStyles";
 import {
   Button,
   Input,

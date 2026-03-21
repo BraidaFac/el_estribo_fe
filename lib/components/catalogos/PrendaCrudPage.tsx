@@ -1,8 +1,8 @@
 "use client";
 
 import ConfirmModal from "@/lib/components/ConfirmModal";
-import { useConfirmDestructive } from "@/lib/hooks/useConfirmDestructive";
 import { Pantalon, Saco } from "@/lib/domain/reservas/types";
+import { useConfirmDestructive } from "@/lib/hooks/useConfirmDestructive";
 import { ACTION_BUTTON_BASE_CLASS, ACTION_BUTTON_CLASSES, TABLE_HEADER_CLASS } from "@/lib/utils/uiStyles";
 import {
   Button,

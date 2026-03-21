@@ -2,10 +2,10 @@
 
 import { PrendaCrudPage } from "@/lib/components/catalogos/PrendaCrudPage";
 import {
-  actualizarSaco,
-  crearSaco,
-  eliminarSaco,
-  listarSacos,
+    actualizarSaco,
+    crearSaco,
+    eliminarSaco,
+    listarSacos,
 } from "@/lib/services/v2";
 
 export default function SacosPage() {
