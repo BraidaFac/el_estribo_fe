@@ -1,9 +1,6 @@
 "use client";
 import { useAppContext } from "@/lib/components/AppContext";
-import {
-  login,
-  Role
-} from "@/lib/services/auth.service";
+import { login } from "@/lib/services/auth.service";
 import { Button, Input } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
@@ -13,16 +10,9 @@ export default function Login() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const redirectByRole = useCallback(
-    (role: string) => {
-      if (role === Role.LAUNDRY) {
-        router.replace("/planillas/retirar");
-        return;
-      }
-      router.replace("/");
-    },
-    [router],
-  );
+  const redirectAfterLogin = useCallback(() => {
+    router.replace("/calendario-v2");
+  }, [router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,7 +30,7 @@ export default function Login() {
       const token = `Bearer ${access_token}`;
       CookiesUtils.setItem("Authorization", token);
       setUser(user);
-      redirectByRole(user.role);
+      redirectAfterLogin();
     } catch {
       setAuthError("Credenciales invalidas");
     } finally {
@@ -50,9 +40,9 @@ export default function Login() {
 
   useEffect(() => {
     if (user) {
-      redirectByRole(user.role);
+      redirectAfterLogin();
     }
-  }, [redirectByRole, user]);
+  }, [redirectAfterLogin, user]);
 
 /*   if (isCheckingSession) {
     return (

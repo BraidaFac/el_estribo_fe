@@ -27,8 +27,3 @@ export const CALENDAR_COLORS = {
   preparation: "bg-pastel-preparation/30",
   booking: "bg-pastel-booking/40",
 };
-
-export const LAUNDRY_COLORS = {
-  lucecita: "bg-pastel-secondary p-1 rounded-md w-fit",
-  celia: "bg-pastel-primary p-1 rounded-md w-fit",
-}

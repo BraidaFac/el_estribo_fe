@@ -11,8 +11,6 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { extractBearerToken, validateToken } from "../services/auth.service";
-import { listSuits } from "../services/suit.service";
-import { Suit } from "../utils/suit";
 
 type User = {
   name: string;
@@ -22,19 +20,10 @@ type User = {
 type AppContextValue = {
   user: User;
   setUser: (user: User) => void;
-  suit: Suit | null;
-  setSuit: (suit: Suit | null) => void;
-  suits: Suit[];
-  setSuits: (suits: Suit[]) => void;
-  fetchSuits: () => void;
   isAuthLoading: boolean;
-  isLoading: boolean;
-  setIsLoading: (loading: boolean) => void;
   showSuccess: (message: string) => void;
   showWarning: (message: string) => void;
   showError: (message: string) => void;
-  error: string | null;
-  setError: (error: string | null) => void;
   authError: string | null;
   setAuthError: (error: string | null) => void;
 };
@@ -43,29 +32,8 @@ const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User>(null);
-  const [suit, setSuit] = useState<Suit | null>(null);
-  const [suits, setSuits] = useState<Suit[]>([]);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
-
-  //#region Suits
-
-  const fetchSuits = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const data = await listSuits();
-      setSuits(data);
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Error al cargar los trajes",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [setIsLoading, setError, setSuits]);
- //#endregion
 
   //#region Toaster
   const showSuccess = useCallback((message: string) => {
@@ -95,34 +63,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const validatedUser = await validateToken(token);
       if (isCancelled) return;
       setUser(validatedUser);
-      fetchSuits();
       setIsAuthLoading(false);
-      fetchSuits();
     })();
 
     return () => {
       isCancelled = true;
     };
-  }, [fetchSuits]);
+  }, []);
   //#endregion
 
   const value = {
     user,
     setUser,
-    suit,
-    setSuit,
-    suits,
-    setSuits,
     isAuthLoading,
-    isLoading,
-    setIsLoading,
     showSuccess,
     showWarning,
     showError,
-    error,
-    setError,
     authError,
-    fetchSuits,
     setAuthError,
   };
 

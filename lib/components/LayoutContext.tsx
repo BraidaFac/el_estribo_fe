@@ -1,4 +1,5 @@
 "use client";
+import { APP_LOCALE } from "@/lib/i18n/appLocale";
 import { HeroUIProvider } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { ReactNode } from "react";
@@ -11,10 +12,10 @@ function LayoutContext({ children }: { children: ReactNode }) {
   const router = useRouter();
   return (
     <body suppressHydrationWarning={true} className="overflow-auto min-h-dvh">
-      <HeroUIProvider navigate={router.push}>
+      <HeroUIProvider locale={APP_LOCALE} navigate={router.push}>
         <AppProvider>
           <AuthGuard>
-            <SonnerToaster richColors position="top-center" />
+            <SonnerToaster richColors position="top-right" />
             <Nav />
             {children}
           </AuthGuard>

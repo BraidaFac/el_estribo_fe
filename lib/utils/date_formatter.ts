@@ -1,4 +1,9 @@
 import { format } from "date-fns";
+import { formatApiDateForUi } from "@/lib/utils/formatApiDate";
+
+/** @deprecated Usar `formatApiDateForUi` (mismo locale que HeroUIProvider) */
+export const formatDateDdMmYyyy = formatApiDateForUi;
+
 export function formatDate(date: Date | number) {
   let formatDay = "";
   let formatMonth = "";

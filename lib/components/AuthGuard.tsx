@@ -16,7 +16,7 @@ export default function AuthGuard({ children }: { children: ReactNode }) {
 
     if (isPublicRoute(pathname)) {
       if (pathname === "/login" && user?.role) {
-        router.replace(user.role === "LAUNDRY" ? "/planillas/retirar" : "/");
+        router.replace("/calendario-v2");
       }
       return;
     }

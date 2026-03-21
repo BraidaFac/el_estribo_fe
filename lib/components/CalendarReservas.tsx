@@ -1,80 +1,78 @@
 "use client";
 
+import { ReservationActionsDialog } from "@/lib/components/reservas/ReservationActionsDialog";
+import { Reserva } from "@/lib/domain/reservas/types";
+import { ReservaDaySummary } from "@/lib/hooks/useDiarioReservas";
+import { formatApiDateForUi } from "@/lib/utils/formatApiDate";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
-import {
-  Button,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  Spinner,
-} from "@heroui/react";
 import { format, getDay, isToday } from "date-fns";
-import { useCalendarReservas } from "./hooks/useCalendarReservas";
+import { es } from "date-fns/locale";
+import { useMemo, useState } from "react";
 
 function classNames(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function CalendarReservas() {
-  const {
-    firstDayCurrentMonth,
-    days,
-    isLoading,
-    error,
-    selectedDay,
-    setSelectedDay,
-    bookingsByDay,
-    previousMonth,
-    nextMonth,
-    selectDay,
-    refreshBookings,
-    toDisplayDate,
-  } = useCalendarReservas();
+function formatDayTitle(dayKey: string): string {
+  const weekday = format(new Date(`${dayKey}T12:00:00`), "EEEE", {
+    locale: es,
+  });
+  const cap = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+  return `${cap}, ${formatApiDateForUi(dayKey)}`;
+}
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spinner color="danger" />
-      </div>
-    );
-  }
+type CalendarReservasProps = {
+  firstDayCurrentMonth: Date;
+  days: Date[];
+  summaryByDay: Record<string, ReservaDaySummary>;
+  previousMonth: () => void;
+  nextMonth: () => void;
+  onDataChanged?: () => Promise<void> | void;
+};
 
-  if (error) {
-    return (
-      <div className="text-center space-y-3">
-        <p className="text-red-600">{error}</p>
-        <Button color="primary" onPress={refreshBookings}>
-          Reintentar
-        </Button>
-      </div>
-    );
-  }
+export default function CalendarReservas({
+  firstDayCurrentMonth,
+  days,
+  summaryByDay,
+  previousMonth,
+  nextMonth,
+  onDataChanged,
+}: CalendarReservasProps) {
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+
+  const selectedReservas: Reserva[] = useMemo(() => {
+    if (!selectedDay) return [];
+    return summaryByDay[selectedDay]?.reservas ?? [];
+  }, [selectedDay, summaryByDay]);
+
+  const refreshAndNotify = async () => {
+    if (!onDataChanged) return;
+    await onDataChanged();
+  };
 
   return (
-    <div className="p-4 h-full">
+    <div className="rounded-lg border border-pastel-border bg-pastel-surface p-4">
       <div className="flex items-center text-center">
         <button
           type="button"
           onClick={previousMonth}
-          className="-my-1.5 flex flex-none items-center justify-center p-1.5 text-gray-400"
+          className="-my-1.5 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-600"
         >
-          <ChevronLeftIcon className="w-8 h-8" aria-hidden="true" />
+          <ChevronLeftIcon className="h-8 w-8" aria-hidden="true" />
         </button>
-        <h2 className="flex-auto font-semibold text-2xl text-pastel-text">
-          {format(firstDayCurrentMonth, "MMMM yyyy")}
+        <h2 className="flex-auto text-2xl font-semibold capitalize text-pastel-text">
+          {format(firstDayCurrentMonth, "MMMM yyyy", { locale: es })}
         </h2>
         <button
           onClick={nextMonth}
           type="button"
-          className="-my-1.5 -mr-1.5 ml-2 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
+          className="-my-1.5 -mr-1.5 ml-2 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-600"
         >
-          <ChevronRightIcon className="w-8 h-8" aria-hidden="true" />
+          <ChevronRightIcon className="h-8 w-8" aria-hidden="true" />
         </button>
       </div>
 
-      <div className="grid grid-cols-7 mt-10 text-xs leading-6 text-center text-pastel-primary">
+      <div className="mt-4 grid grid-cols-7 text-center text-xs text-pastel-primary">
         <div>D</div>
         <div>L</div>
         <div>M</div>
@@ -84,114 +82,73 @@ export default function CalendarReservas() {
         <div>S</div>
       </div>
 
-      <div className="grid grid-cols-7 mt-2 text-sm gap-2 p-2">
+      <div className="mt-2 grid grid-cols-7 gap-2">
         {days.map((day, dayIdx) => {
           const dayKey = format(day, "yyyy-MM-dd");
-          const dayData = bookingsByDay[dayKey];
+          const dayData = summaryByDay[dayKey];
+          const cantidadSacos = dayData?.cantidadSacos ?? 0;
+          const cantidadPantalones = dayData?.cantidadPantalones ?? 0;
+          const hasBookings = cantidadSacos > 0 || cantidadPantalones > 0;
 
           return (
             <div
-              key={day.toString()}
+              key={dayKey}
               className={classNames(
-                dayIdx === 0 && colStartClasses[getDay(day)],
-                "md:h-28 h-14 w-full border-solid border-2 border-pastel-border relative",
+                dayIdx === 0 && colStartClasses[getDay(firstDayCurrentMonth)],
+                "relative h-24 w-full rounded-md border border-pastel-border md:h-28",
               )}
             >
               <button
-                onClick={() => {
-                  selectDay(day);
-                }}
+                onClick={() => setSelectedDay(dayKey)}
                 type="button"
                 className={classNames(
-                  "text-pastel-text font-semibold",
-                  isToday(day) && "bg-pastel-primary/80 text-white",
-                  !isToday(day) && "bg-pastel-soft",
-                  "w-full h-full flex flex-col justify-center items-start p-1",
+                  "h-full w-full rounded-md p-2 text-left transition-colors ",
+                  hasBookings && "bg-pastel-secondary/50",
+                  isToday(day) && !hasBookings
+                    ? "bg-pastel-primary/85 text-white"
+                    : "bg-pastel-soft",
                 )}
               >
-                <span className="text-xs md:text-sm absolute top-0 md:top-1 left-1 text-pastel-text">
+                <span className="text-xs font-semibold">
                   {format(day, "d")}
                 </span>
-                <span
-                  className={`text-lg font-bold text-center self-center ${
-                    dayData?.cantidad ? "text-pink-500" : "text-pastel-text"
-                  } `}
-                >
-                  {dayData?.cantidad || 0}
-                </span>
+                <div className="mt-2 flex flex-row justify-center items-center gap-2 text-[10px] md:text-xs">
+                  <div
+                    className={classNames(
+                      "inline-flex rounded px-1.5 py-0.5",
+                      cantidadSacos > 0
+                        ? "bg-rose-100 text-rose-800"
+                        : "bg-white/50 text-pastel-text/80",
+                    )}
+                  >
+                    S: {cantidadSacos}
+                  </div>
+                  <div
+                    className={classNames(
+                      "inline-flex rounded px-1.5 py-0.5",
+                      cantidadPantalones > 0
+                        ? "bg-sky-300 text-sky-800"
+                        : "bg-white/50 text-pastel-text/80",
+                    )}
+                  >
+                    P: {cantidadPantalones}
+                  </div>
+                </div>
               </button>
             </div>
           );
         })}
       </div>
 
-      <Modal
+      <ReservationActionsDialog
         isOpen={!!selectedDay}
-        onClose={() => setSelectedDay(null)}
-        placement="center"
-        backdrop="blur"
-        className="h-5/6 my-5 overflow-auto"
-      >
-        <ModalContent>
-          <ModalHeader>
-            Reservas del día {selectedDay ? toDisplayDate(selectedDay) : ""}
-          </ModalHeader>
-          <ModalBody>
-            {selectedDay && bookingsByDay?.[selectedDay] ? (
-              bookingsByDay[selectedDay].reservas.map((booking) => (
-                <div
-                  key={booking.id}
-                  className="bg-pastel-soft shadow-lg rounded-md p-2 border border-pastel-border"
-                >
-                    <h1 className="text-xl text-pastel-text font-bold text-center">
-                      Reserva numero: {booking.id}
-                    </h1>
-                    <div className="mb-4">
-                      <h3 className="text-lg font-semibold text-blue-700 mb-2">
-                        Información del Cliente
-                      </h3>
-                      <p>
-                        <strong>Nombre: </strong> {booking.client_name}
-                      </p>
-                      <p>
-                        <strong>Celular: </strong>
-                        {booking.client_phone}
-                      </p>
-                    </div>
-                    <div className="mb-4">
-                      <h3 className="text-lg font-semibold text-blue-700 mb-2">
-                        Información del Traje
-                      </h3>
-                      <p>
-                        <strong>Codigo Traje: </strong>
-                        {booking.suit.id}
-                      </p>
-
-                      <p>
-                        <strong>Color: </strong>
-                        {booking.suit.color}
-                      </p>
-                      <p>
-                        <strong>Talle: </strong>
-                        {booking.suit.size}
-                      </p>
-                    </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-center text-red-800 text-xl">
-                No hay información disponible para este día.
-              </p>
-            )}
-          </ModalBody>
-
-          <ModalFooter>
-            <Button color="primary" onPress={() => setSelectedDay(null)}>
-              Cerrar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        onOpenChange={(open) => {
+          if (!open) setSelectedDay(null);
+        }}
+        title={`Reservas del día ${selectedDay ? formatDayTitle(selectedDay) : ""}`}
+        reservas={selectedReservas}
+        onDataChanged={refreshAndNotify}
+      />
     </div>
   );
 }

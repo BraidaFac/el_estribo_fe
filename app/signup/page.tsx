@@ -1,19 +1,14 @@
 "use client";
-import { useUserState } from "@/lib/utils/UserState";
 import { API_BACKEND } from "@/lib/utils/constanst";
-import { Button, Input, Spinner } from "@heroui/react";
-import { deleteCookie } from "cookies-next";
+import { Button, Input } from "@heroui/react";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
-import CookiesUtils from "../../lib/utils/cookies";
+import { FormEvent, useState } from "react";
+
 export default function Signup() {
-  const { setUser } = useUserState();
   const router = useRouter();
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

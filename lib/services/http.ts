@@ -16,18 +16,26 @@ export async function apiFetch<T>(
   endpoint: string,
   init?: RequestInit,
 ): Promise<T> {
-  const response = await fetch(`${API_BACKEND}${endpoint}`, {
-    ...init, headers: {
-      "Content-Type": "application/json", 
-      ...init?.headers,
-      "Authorization": `Bearer ${extractBearerToken(getCookie("Authorization"))}`,
-   }});
+  let response: Response;
+  try {
+    response = await fetch(`${API_BACKEND}${endpoint}`, {
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...init?.headers,
+        Authorization: `Bearer ${extractBearerToken(getCookie("Authorization"))}`,
+      },
+    });
+  } catch {
+    throw new ApiError(
+      "No se pudo conectar con el backend. Revisa tu red o la URL configurada.",
+      0,
+    );
+  }
 
   if (!response.ok) {
     const errorBody = await safeJsonParse(response);
-    const message =
-      errorBody?.message ||
-      `Request failed: ${response.status} ${response.statusText}`;
+    const message = getErrorMessage(errorBody, response.status, response.statusText);
     throw new ApiError(message, response.status);
   }
 
@@ -44,4 +52,22 @@ async function safeJsonParse(response: Response): Promise<any> {
   } catch {
     return null;
   }
+}
+
+function getErrorMessage(
+  errorBody: any,
+  status: number,
+  statusText: string,
+): string {
+  const rawMessage = errorBody?.message;
+
+  if (Array.isArray(rawMessage)) {
+    return rawMessage.join(", ");
+  }
+
+  if (typeof rawMessage === "string" && rawMessage.trim()) {
+    return rawMessage;
+  }
+
+  return `Request failed: ${status} ${statusText}`;
 }

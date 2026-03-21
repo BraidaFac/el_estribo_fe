@@ -2,7 +2,6 @@ import { ApiError, apiFetch } from "./http";
 
 export enum Role {
   ADMIN = "ADMIN",
-  LAUNDRY = "LAUNDRY",
   USER = "USER",
 }
 
