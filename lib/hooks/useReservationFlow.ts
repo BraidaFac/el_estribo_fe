@@ -2,6 +2,7 @@
 
 import { CreateReservaV2Payload, Pantalon } from "@/lib/domain/reservas/types";
 import { crearReservaV2, pantalonesDisponibles, validarReservaV2 } from "@/lib/services/v2";
+import { ApiError } from "@/lib/services/http";
 import { format } from "date-fns";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
@@ -44,6 +45,8 @@ export function useReservationFlow({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [validacionFechaError, setValidacionFechaError] = useState<string | null>(null);
+  const [ofertaUltimoMomento, setOfertaUltimoMomento] = useState(false);
+  const [reservaUltimoMomento, setReservaUltimoMomento] = useState(false);
   const [isValidandoFecha, setIsValidandoFecha] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<ReservationFieldErrors>({});
   const [hasTriedSubmit, setHasTriedSubmit] = useState(false);
@@ -78,6 +81,8 @@ export function useReservationFlow({
     setPantalones([]);
     setLoadError(null);
     setValidacionFechaError(null);
+    setOfertaUltimoMomento(false);
+    setReservaUltimoMomento(false);
     setIsValidandoFecha(false);
     setFieldErrors({});
     setHasTriedSubmit(false);
@@ -110,6 +115,8 @@ export function useReservationFlow({
     setForm(INITIAL_FORM);
     setFieldErrors({});
     setHasTriedSubmit(false);
+    setOfertaUltimoMomento(false);
+    setReservaUltimoMomento(false);
   }, [isOpen, fechaReserva, sacoId]);
 
   useEffect(() => {
@@ -137,13 +144,20 @@ export function useReservationFlow({
           pantalonId: form.pantalonId,
           fechaReserva,
           requiereModista: true,
+          ...(reservaUltimoMomento ? { reservaUltimoMomento: true } : {}),
         });
         if (!cancelled) {
           setValidacionFechaError(null);
+          setOfertaUltimoMomento(false);
         }
       } catch (error) {
         if (!cancelled) {
           setValidacionFechaError(getUserFacingErrorMessage(error));
+          const payload =
+            error instanceof ApiError && error.payload && typeof error.payload === "object"
+              ? (error.payload as Record<string, unknown>)
+              : null;
+          setOfertaUltimoMomento(payload?.puedeUltimoMomento === true);
         }
       } finally {
         if (!cancelled) {
@@ -155,7 +169,7 @@ export function useReservationFlow({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, sacoId, fechaReserva, form.pantalonId]);
+  }, [isOpen, sacoId, fechaReserva, form.pantalonId, reservaUltimoMomento]);
 
   const validateForm = useCallback((): ReservationFieldErrors => {
     const errors: ReservationFieldErrors = {};
@@ -211,6 +225,7 @@ export function useReservationFlow({
         pantalonId: form.pantalonId,
         fechaReserva,
         requiereModista: true,
+        ...(reservaUltimoMomento ? { reservaUltimoMomento: true } : {}),
       };
 
       await validarReservaV2(validarPayload);
@@ -231,7 +246,7 @@ export function useReservationFlow({
     } finally {
       setIsSubmitting(false);
     }
-  }, [fechaReserva, form, sacoId, validateForm]);
+  }, [fechaReserva, form, reservaUltimoMomento, sacoId, validateForm]);
 
   return {
     form,
@@ -241,6 +256,9 @@ export function useReservationFlow({
     isSubmitting,
     loadError,
     validacionFechaError,
+    ofertaUltimoMomento,
+    reservaUltimoMomento,
+    setReservaUltimoMomento,
     isValidandoFecha,
     fieldErrors,
     canSubmit,

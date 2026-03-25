@@ -1,5 +1,6 @@
 "use client";
 
+import ConfirmModal from "@/lib/components/ConfirmModal";
 import { EnvioLavanderiaReservaModal } from "@/lib/components/planillas/EnvioLavanderiaReservaModal";
 import { EnvioModistaReservaModal } from "@/lib/components/planillas/EnvioModistaReservaModal";
 import { ApiDateField } from "@/lib/components/ui/ApiDateField";
@@ -11,7 +12,12 @@ import {
   getEstadoUbicacionPrendaLabel,
   getPrioridadTareaOperativaLabel
 } from "@/lib/domain/reservas/labels";
+import {
+  prendasEnTiendaParaRetiroCliente,
+  reservaTieneTareasOperativasAbiertas,
+} from "@/lib/domain/reservas/retiroCliente";
 import { Reserva, TareaOperativa } from "@/lib/domain/reservas/types";
+import { useConfirmDestructive } from "@/lib/hooks/useConfirmDestructive";
 import {
   PLANILLA_OPERACIONES_UI,
   type PlanillaOperacionesMode,
@@ -82,11 +88,14 @@ function defaultDesdeHasta() {
 
 export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) {
   const ui = PLANILLA_OPERACIONES_UI[mode];
+  const { confirmModalRef, confirmDestructive } = useConfirmDestructive();
   const [desde, setDesde] = useState(() => defaultDesdeHasta().desde);
   const [hasta, setHasta] = useState(() => defaultDesdeHasta().hasta);
   const [isLoading, setIsLoading] = useState(false);
   const [tareas, setTareas] = useState<TareaOperativa[]>([]);
   const [reservas, setReservas] = useState<Reserva[]>([]);
+  /** Tareas operativas (filtradas por reservas visibles) para advertencias en retiro de cliente. */
+  const [tareasRetiroContexto, setTareasRetiroContexto] = useState<TareaOperativa[]>([]);
   const [lavModalReservaId, setLavModalReservaId] = useState<number | null>(null);
   const [lavModalPantalon, setLavModalPantalon] = useState(false);
   const [modModalReservaId, setModModalReservaId] = useState<number | null>(null);
@@ -150,6 +159,15 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
         const data = await listarReservasRango(desde, hasta);
         setReservas(data);
         setTareas([]);
+        if (mode === "RETIROS_CLIENTES" && data.length > 0) {
+          const ids = data.map((r) => r.id).join(",");
+          const tareasCtx = await listarTareasOperativas({
+            reservaIds: ids,
+          });
+          setTareasRetiroContexto(tareasCtx);
+        } else {
+          setTareasRetiroContexto([]);
+        }
       }
     } catch (error) {
       toast.error(getUserFacingErrorMessage(error));
@@ -205,14 +223,48 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
     }
   };
 
-  const handleRetiroCliente = async (reserva: Reserva) => {
-    try {
-      await marcarReservaRetirada(reserva.id);
-      toast.success("Reserva marcada como retirada");
-      await handleSearch();
-    } catch (error) {
-      toast.error(getUserFacingErrorMessage(error));
+  const ejecutarRetiroCliente = async (reserva: Reserva) => {
+    await marcarReservaRetirada(
+      reserva.id,
+      reservaTieneTareasOperativasAbiertas(tareasRetiroContexto, reserva.id)
+        ? "Retiro en local con tareas operativas pendientes"
+        : undefined,
+    );
+    toast.success("Reserva marcada como retirada");
+    await handleSearch();
+  };
+
+  const solicitarRetiroCliente = (reserva: Reserva) => {
+    if (!prendasEnTiendaParaRetiroCliente(reserva)) return;
+    const conAdvertencia = reservaTieneTareasOperativasAbiertas(
+      tareasRetiroContexto,
+      reserva.id,
+    );
+    if (conAdvertencia) {
+      void confirmDestructive({
+        title: "Tareas pendientes",
+        message:
+          "Esta reserva todavía tiene tareas pendientes. ¿Desea retirar igual el traje?",
+        confirmText: "Retirar igual",
+        variant: "warning",
+        action: async () => {
+          try {
+            await ejecutarRetiroCliente(reserva);
+          } catch (error) {
+            toast.error(getUserFacingErrorMessage(error));
+            throw error;
+          }
+        },
+      });
+      return;
     }
+    void (async () => {
+      try {
+        await ejecutarRetiroCliente(reserva);
+      } catch (error) {
+        toast.error(getUserFacingErrorMessage(error));
+      }
+    })();
   };
 
   const handleDevolucionCliente = async (reserva: Reserva) => {
@@ -242,6 +294,8 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
 
   return (
     <div className="space-y-4 p-4 md:p-6">
+      <ConfirmModal ref={confirmModalRef} />
+
       <div className="rounded-lg border border-pastel-border bg-pastel-surface p-4">
         <h1 className="text-2xl font-semibold text-pastel-text">{ui.title}</h1>
         <p className="mt-1 text-sm text-pastel-text/80">{ui.description}</p>
@@ -433,7 +487,16 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
                 </TableCell>
                 <TableCell>
                   {mode === "RETIROS_CLIENTES" ? (
-                    <Button size="sm" color="primary" onPress={() => void handleRetiroCliente(row)}>
+                    <Button
+                      size="sm"
+                      color={
+                        reservaTieneTareasOperativasAbiertas(tareasRetiroContexto, row.id)
+                          ? "warning"
+                          : "primary"
+                      }
+                      isDisabled={!prendasEnTiendaParaRetiroCliente(row)}
+                      onPress={() => void solicitarRetiroCliente(row)}
+                    >
                       Registrar retiro en el local
                     </Button>
                   ) : (

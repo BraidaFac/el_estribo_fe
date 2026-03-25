@@ -11,7 +11,7 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const redirectAfterLogin = useCallback(() => {
-    router.replace("/calendario-v2");
+    router.replace("/");
   }, [router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {

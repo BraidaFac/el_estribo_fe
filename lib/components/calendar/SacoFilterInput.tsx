@@ -13,7 +13,9 @@ type SacoFilterInputProps = {
 };
 
 function buildSacoLabel(saco: Saco): string {
-  return `${saco.codigo} - ${saco.marca}${saco.talle ? ` - Talle ${saco.talle}` : ""}`;
+  const colorPart = saco.color?.trim() ? ` - ${saco.color.trim()}` : "";
+  const tallePart = saco.talle ? ` - Talle ${saco.talle}` : "";
+  return `${saco.codigo} - ${saco.marca}${colorPart}${tallePart}`;
 }
 
 export function SacoFilterInput({
@@ -58,7 +60,7 @@ export function SacoFilterInput({
     const normalized = query.trim().toLowerCase();
     return catalogo
       .filter((saco) =>
-        `${saco.codigo} ${saco.marca} ${saco.talle ?? ""} ${buildSacoLabel(saco)}`
+        `${saco.codigo} ${saco.marca} ${saco.color ?? ""} ${saco.talle ?? ""} ${buildSacoLabel(saco)}`
           .toLowerCase()
           .includes(normalized),
       )
@@ -69,7 +71,7 @@ export function SacoFilterInput({
     <div className="space-y-2">
       <div className="flex items-end gap-2">
         <Input
-          label="Buscar saco por codigo o marca"
+          label="Buscar saco por codigo, marca o color"
           value={query}
           onValueChange={(next) => {
             setQuery(next);
@@ -96,7 +98,7 @@ export function SacoFilterInput({
         </div>
       ) : !canSearch ? (
         <p className="text-xs text-pastel-text/70">
-          Escribe al menos 2 letras para buscar por codigo o marca.
+          Escribe al menos 2 letras para buscar por codigo, marca o color.
         </p>
       ) : filtered.length > 0 ? (
         <div className="max-h-44 overflow-auto rounded-lg border border-pastel-border bg-pastel-soft p-1">

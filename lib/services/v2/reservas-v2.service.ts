@@ -1,3 +1,4 @@
+import type { DashboardOperativoResponse } from "@/lib/domain/dashboard/types";
 import {
   CreateReservaV2Payload,
   Disponibilidad,
@@ -33,6 +34,10 @@ export async function listarReservasRango(
       sacoId: sacoId ?? undefined,
     })}`,
   );
+}
+
+export async function fetchDashboardOperativo(): Promise<DashboardOperativoResponse> {
+  return apiFetch<DashboardOperativoResponse>("/v2/reservas/dashboard-operativo");
 }
 
 export async function pantalonesDisponibles(

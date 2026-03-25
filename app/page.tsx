@@ -1,6 +1,7 @@
 "use client";
-import { CalendarioV2Screen } from "@/lib/components/calendar/CalendarioV2Screen";
+
+import { DashboardOperativoPage } from "@/lib/components/dashboard/DashboardOperativoPage";
 
 export default function Home() {
-  return <CalendarioV2Screen />;
+  return <DashboardOperativoPage />;
 }

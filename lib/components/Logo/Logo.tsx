@@ -1,8 +1,20 @@
-import Link from 'next/link';
-import styles from './Logo.module.css';
+import Image from "next/image";
+import Link from "next/link";
+
 const Logo = () => (
-  <Link href="/">
-    <span style={{ marginLeft: '-10px' }} className={styles.icon}></span>
+  <Link
+    href="/"
+    className="inline-flex items-center"
+    aria-label="Inicio El Estribo"
+  >
+    <Image
+      src="/icon.png"
+      alt="El Estribo"
+      width={100}
+      height={100}
+      className="h-22 w-22 object-contain"
+      priority
+    />
   </Link>
 );
 

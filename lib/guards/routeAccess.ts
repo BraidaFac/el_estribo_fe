@@ -16,7 +16,7 @@ export function getRedirectForRole(
   const normalizedRole = normalizeRole(role);
 
   if (pathname === "/signup" && normalizedRole !== "ADMIN") {
-    return "/calendario-v2";
+    return "/";
   }
 
   return null;

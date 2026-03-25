@@ -1,5 +1,6 @@
 "use client";
 
+import { buildWhatsappContactoMedicionMessage } from "@/lib/domain/reservas/whatsappContactoMedicion";
 import { TareaOperativa } from "@/lib/domain/reservas/types";
 import {
   getEstadoTareaOperativaLabel,
@@ -17,6 +18,7 @@ import { formatApiDateForUi } from "@/lib/utils/formatApiDate";
 import { TABLE_HEADER_CLASS } from "@/lib/utils/uiStyles";
 import {
   Button,
+  Checkbox,
   DatePicker,
   Modal,
   ModalBody,
@@ -37,20 +39,6 @@ import { Time, parseDate } from "@internationalized/date";
 import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-
-function formatMsgDate(s: string | null | undefined): string {
-  if (s == null || s === "" || s === "-") return "-";
-  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? formatApiDateForUi(s) : s;
-}
-
-function buildWhatsappMessage(tarea: TareaOperativa): string {
-  const nombre = tarea.clienteNombre ?? "cliente";
-  const fechaReservaRaw = String((tarea.metadataJson?.fechaReserva as string) ?? "-");
-  const fechaReserva = formatMsgDate(fechaReservaRaw === "-" ? null : fechaReservaRaw);
-  const desde = formatMsgDate(tarea.fechaObjetivoDesde);
-  const hasta = formatMsgDate(tarea.fechaObjetivoHasta);
-  return `Hola ${nombre}! Te hablamos desde El Estribo por la reserva de un Traje para el dia ${fechaReserva}. Necesitamos dentro de los dias ${desde} al ${hasta} para tomarte las medidas del traje. Saludos, Equipo de El Estribo.`;
-}
 
 function normalizePhone(phone?: string | null): string | null {
   if (!phone) return null;
@@ -190,6 +178,7 @@ export function PlanillaContactoMedicionPage() {
   const [citaDate, setCitaDate] = useState("");
   const [citaTime, setCitaTime] = useState("");
   const [observaciones, setObservaciones] = useState("");
+  const [noValidarFecha, setNoValidarFecha] = useState(false);
   const [isSavingAgenda, setIsSavingAgenda] = useState(false);
   const [markingContactId, setMarkingContactId] = useState<number | null>(null);
   const [isLoadingAgendaDetalle, setIsLoadingAgendaDetalle] = useState(false);
@@ -317,15 +306,30 @@ export function PlanillaContactoMedicionPage() {
       toast.error("Selecciona fecha y hora de cita");
       return;
     }
+    if (!noValidarFecha && selectedTask.fechaObjetivoDesde && selectedTask.fechaObjetivoHasta) {
+      const citaKey = fechaHoraCita.slice(0, 10);
+      if (
+        citaKey < selectedTask.fechaObjetivoDesde ||
+        citaKey > selectedTask.fechaObjetivoHasta
+      ) {
+        toast.error("La cita debe quedar dentro de la ventana de medición");
+        return;
+      }
+    }
     const esReagendar = tieneCitaAgendada(selectedTask);
     try {
       setIsSavingAgenda(true);
-      await programarMedicion(selectedTask.id, { fechaHoraCita, observaciones });
+      await programarMedicion(selectedTask.id, {
+        fechaHoraCita,
+        observaciones,
+        noValidarFecha: noValidarFecha || undefined,
+      });
       toast.success(esReagendar ? "Cita actualizada" : "Cita de medición programada");
       setSelectedTask(null);
       setCitaDate("");
       setCitaTime("");
       setObservaciones("");
+      setNoValidarFecha(false);
       await load();
     } catch (error) {
       toast.error(getUserFacingErrorMessage(error));
@@ -376,7 +380,7 @@ export function PlanillaContactoMedicionPage() {
                       <span className="min-w-0">{row.clienteTelefono ?? "—"}</span>
                       <WhatsappIconLink
                         telefono={row.clienteTelefono}
-                        mensaje={buildWhatsappMessage(row)}
+                        mensaje={buildWhatsappContactoMedicionMessage(row)}
                       />
                     </div>
                   </TableCell>
@@ -443,7 +447,10 @@ export function PlanillaContactoMedicionPage() {
       <Modal
         isOpen={!!selectedTask}
         onOpenChange={(open) => {
-          if (!open) setSelectedTask(null);
+          if (!open) {
+            setSelectedTask(null);
+            setNoValidarFecha(false);
+          }
         }}
       >
         <ModalContent>
@@ -486,6 +493,17 @@ export function PlanillaContactoMedicionPage() {
                       onChange={(v) => setCitaTime(v == null ? "" : timeValueToHm(v))}
                     />
                   </div>
+                  <Checkbox
+                    className="mt-3"
+                    isSelected={noValidarFecha}
+                    onValueChange={setNoValidarFecha}
+                  >
+                    No validar fecha
+                  </Checkbox>
+                  <p className="mt-1 text-xs text-pastel-text/70">
+                    Si está marcado, no se comprueba que la cita esté dentro de la ventana de medición
+                    (solo con excepción operativa).
+                  </p>
                   <Textarea
                     className="mt-2"
                     label="Observaciones"
@@ -497,7 +515,13 @@ export function PlanillaContactoMedicionPage() {
               )}
             </ModalBody>
             <ModalFooter>
-              <Button variant="light" onPress={() => setSelectedTask(null)}>
+              <Button
+                variant="light"
+                onPress={() => {
+                  setSelectedTask(null);
+                  setNoValidarFecha(false);
+                }}
+              >
                 Cancelar
               </Button>
               <Button

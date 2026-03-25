@@ -29,6 +29,7 @@ type NavGroup = {
 };
 
 const PRIMARY_NAV_ITEMS: NavItem[] = [
+  { key: "inicio", label: "Inicio", href: "/" },
   { key: "calendario", label: "Calendario", href: "/calendario-v2" },
   { key: "diario", label: "Diario", href: "/diario" },
 ];

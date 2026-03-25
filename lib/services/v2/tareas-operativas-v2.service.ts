@@ -11,11 +11,14 @@ import { buildQueryString } from "./query-string";
 export async function listarTareasOperativas(params?: {
   tipoTarea?: TipoTareaOperativa;
   estado?: EstadoTareaOperativa;
+  /** IDs de reserva separados por coma. */
+  reservaIds?: string;
 }): Promise<TareaOperativa[]> {
   return apiFetch<TareaOperativa[]>(
     `/v2/tareas-operativas${buildQueryString({
       tipoTarea: params?.tipoTarea,
       estado: params?.estado,
+      reservaIds: params?.reservaIds,
     })}`,
   );
 }
@@ -141,7 +144,11 @@ export async function marcarRecibidoModista(
 
 export async function programarMedicion(
   tareaId: number,
-  payload: { fechaHoraCita: string; observaciones?: string },
+  payload: {
+    fechaHoraCita: string;
+    observaciones?: string;
+    noValidarFecha?: boolean;
+  },
 ): Promise<AgendaMedicion> {
   return apiFetch<AgendaMedicion>(
     `/v2/tareas-operativas/${tareaId}/programar-medicion`,

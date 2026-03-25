@@ -5,6 +5,7 @@ import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
 import { formatApiDateForUi } from "@/lib/utils/formatApiDate";
 import {
   Button,
+  Checkbox,
   Input,
   Modal,
   ModalBody,
@@ -40,6 +41,9 @@ export function ReservationModal({
     isSubmitting,
     loadError,
     validacionFechaError,
+    ofertaUltimoMomento,
+    reservaUltimoMomento,
+    setReservaUltimoMomento,
     fieldErrors,
     canSubmit,
     submit,
@@ -82,7 +86,10 @@ export function ReservationModal({
           </ModalHeader>
           <ModalBody>
             <p className="sr-only" aria-live="polite">
-              {loadError ?? (isSubmitting ? "Guardando reserva" : "Formulario de reserva cargado")}
+              {loadError ??
+                (isSubmitting
+                  ? "Guardando reserva"
+                  : "Formulario de reserva cargado")}
             </p>
             <div className="rounded border border-pastel-border bg-pastel-soft p-2 text-sm text-pastel-text">
               <p>
@@ -105,7 +112,7 @@ export function ReservationModal({
                     {loadError}
                   </div>
                 )}
-                {(validacionFechaError) && (
+                {validacionFechaError && (
                   <div
                     className={
                       validacionFechaError
@@ -116,6 +123,18 @@ export function ReservationModal({
                   >
                     {validacionFechaError ??
                       "Comprobando que la fecha sea factible con medición, modista y días hábiles…"}
+                  </div>
+                )}
+
+                {ofertaUltimoMomento && validacionFechaError && (
+                  <div className="rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+                    <Checkbox
+                      classNames={{ label: "text-sm" }}
+                      isSelected={reservaUltimoMomento}
+                      onValueChange={setReservaUltimoMomento}
+                    >
+                      Reserva a último momento.
+                    </Checkbox>
                   </div>
                 )}
 
@@ -166,17 +185,21 @@ export function ReservationModal({
                   }
                 />
                 {fieldErrors.pantalonId && (
-                  <p className="text-xs text-red-600">{fieldErrors.pantalonId}</p>
+                  <p className="text-xs text-red-600">
+                    {fieldErrors.pantalonId}
+                  </p>
                 )}
                 {pantalones.length === 0 && (
                   <p className="text-xs text-pastel-text/80">
-                    No hay pantalones disponibles para esta fecha. Puedes continuar sin pantalon.
+                    No hay pantalones disponibles para esta fecha. Puedes
+                    continuar sin pantalon.
                   </p>
                 )}
 
                 <p className="text-xs text-pastel-text/80">
-                  La lavandería y la modista se asignan más adelante, al registrar el envío operativo
-                  desde las planillas correspondientes.
+                  La lavandería y la modista se asignan más adelante, al
+                  registrar el envío operativo desde las planillas
+                  correspondientes.
                 </p>
 
                 <Textarea

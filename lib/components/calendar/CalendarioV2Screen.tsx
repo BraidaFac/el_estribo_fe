@@ -168,6 +168,9 @@ export function CalendarioV2Screen() {
               <div className="space-y-1">
                 <p>
                   <strong>Saco:</strong> {selectedSaco.codigo} - {selectedSaco.marca}
+                  {selectedSaco.color?.trim()
+                    ? ` - ${selectedSaco.color.trim()}`
+                    : ""}
                 </p>
                 <p>
                   <strong>Estado actual:</strong>{" "}

@@ -3,6 +3,7 @@
 import ConfirmModal from "@/lib/components/ConfirmModal";
 import { Pantalon, Saco } from "@/lib/domain/reservas/types";
 import { useConfirmDestructive } from "@/lib/hooks/useConfirmDestructive";
+import { formatApiDateTimeForUi } from "@/lib/utils/formatApiDate";
 import { ACTION_BUTTON_BASE_CLASS, ACTION_BUTTON_CLASSES, TABLE_HEADER_CLASS } from "@/lib/utils/uiStyles";
 import {
   Button,
@@ -60,6 +61,7 @@ type PrendaColumnKey =
   | "talle"
   | "color"
   | "condicion"
+  | "creadoEn"
   | "acciones";
 
 export function PrendaCrudPage<T extends Prenda>({
@@ -114,6 +116,7 @@ export function PrendaCrudPage<T extends Prenda>({
       { key: "talle", label: "Talle" },
       { key: "color", label: "Color" },
       { key: "condicion", label: "Condicion" },
+      { key: "creadoEn", label: "Alta" },
       { key: "acciones", label: "Acciones" },
     ];
   }, []);
@@ -130,6 +133,10 @@ export function PrendaCrudPage<T extends Prenda>({
         return item.color ?? "-";
       case "condicion":
         return item.condicion;
+      case "creadoEn":
+        return "createdAt" in item && item.createdAt
+          ? formatApiDateTimeForUi(item.createdAt)
+          : "-";
       case "acciones":
         return (
           <div className="flex flex-wrap gap-2">

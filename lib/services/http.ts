@@ -4,11 +4,14 @@ import { extractBearerToken } from "./auth.service";
 
 export class ApiError extends Error {
   status: number;
+  /** Cuerpo JSON del error (si el backend lo envió), p. ej. puedeUltimoMomento o codigo. */
+  payload?: unknown;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, payload?: unknown) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.payload = payload;
   }
 }
 
@@ -36,7 +39,7 @@ export async function apiFetch<T>(
   if (!response.ok) {
     const errorBody = await safeJsonParse(response);
     const message = getErrorMessage(errorBody, response.status, response.statusText);
-    throw new ApiError(message, response.status);
+    throw new ApiError(message, response.status, errorBody);
   }
 
   if (response.status === 204) {

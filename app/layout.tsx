@@ -4,6 +4,10 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "El Estribo",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 export const viewport: Viewport = {
   width: "device-width",

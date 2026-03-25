@@ -55,6 +55,8 @@ export interface Saco {
   condicion: CondicionPrenda;
   activo: boolean;
   ubicacionActual: EstadoUbicacionPrenda;
+  /** ISO 8601 desde el API (TypeORM created_at). */
+  createdAt?: string;
 }
 
 export interface Pantalon {
@@ -66,6 +68,8 @@ export interface Pantalon {
   condicion: CondicionPrenda;
   activo: boolean;
   ubicacionActual: EstadoUbicacionPrenda;
+  /** ISO 8601 desde el API (TypeORM created_at). */
+  createdAt?: string;
 }
 
 export interface Lavanderia {
@@ -160,6 +164,8 @@ export interface ValidarReservaV2Payload {
   pantalonId?: number;
   fechaReserva: string;
   requiereModista?: boolean;
+  /** Solo tiene efecto si el backend indicó que aplica “último momento”. */
+  reservaUltimoMomento?: boolean;
 }
 
 export interface CreateReservaV2Payload extends ValidarReservaV2Payload {
