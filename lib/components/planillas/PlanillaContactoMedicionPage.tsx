@@ -1,12 +1,12 @@
 "use client";
 
-import { buildWhatsappContactoMedicionMessage } from "@/lib/domain/reservas/whatsappContactoMedicion";
-import { TareaOperativa } from "@/lib/domain/reservas/types";
+import { MedicionesReservaModal } from "@/lib/components/medidas/MedicionesReservaModal";
 import {
   getEstadoTareaOperativaLabel,
   getPrioridadTareaOperativaLabel,
 } from "@/lib/domain/reservas/labels";
-import { MedicionesReservaModal } from "@/lib/components/medidas/MedicionesReservaModal";
+import { TareaOperativa } from "@/lib/domain/reservas/types";
+import { buildWhatsappContactoMedicionMessage } from "@/lib/domain/reservas/whatsappContactoMedicion";
 import {
   listarAgendaMediciones,
   listarTareasOperativas,

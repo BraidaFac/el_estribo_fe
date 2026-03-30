@@ -4,7 +4,6 @@ const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const ISO_PREFIX_REGEX = /^\d{4}-\d{2}-\d{2}T/;
 
 export function formatApiDate(input: DateOnlyInput): string {
-  console.log("input", input);
   if (input instanceof Date) {
     return formatDateFromLocalParts(input);
   }

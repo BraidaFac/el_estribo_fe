@@ -1,4 +1,9 @@
 import type { DashboardOperativoResponse } from "@/lib/domain/dashboard/types";
+import type { RecepcionDevolucionPayload } from "@/lib/domain/reservas/recepcionDevolucion";
+import type {
+  HistorialReservasResponse,
+  ReservaDetalleOperativo,
+} from "@/lib/domain/reservas/seguimientoReservas";
 import {
   CreateReservaV2Payload,
   Disponibilidad,
@@ -88,12 +93,39 @@ export async function marcarReservaRetirada(
 
 export async function marcarReservaDevuelta(
   reservaId: number,
-  motivo?: string,
+  payload: { recepcion: RecepcionDevolucionPayload; motivo?: string },
 ): Promise<Reserva> {
   return apiFetch<Reserva>(`/v2/reservas/${reservaId}/devolver`, {
     method: "POST",
-    body: JSON.stringify({ motivo }),
+    body: JSON.stringify(payload),
   });
+}
+
+/** Filtro opcional del historial: un solo texto (query `buscar`). */
+export type HistorialReservasFiltros = {
+  buscar?: string;
+};
+
+export async function listarHistorialReservas(
+  page = 1,
+  limit = 30,
+  filtros?: HistorialReservasFiltros,
+): Promise<HistorialReservasResponse> {
+  return apiFetch<HistorialReservasResponse>(
+    `/v2/reservas/historial${buildQueryString({
+      page,
+      limit,
+      buscar: filtros?.buscar,
+    })}`,
+  );
+}
+
+export async function obtenerDetalleOperativoReserva(
+  reservaId: number,
+): Promise<ReservaDetalleOperativo> {
+  return apiFetch<ReservaDetalleOperativo>(
+    `/v2/reservas/${reservaId}/detalle-operativo`,
+  );
 }
 
 export async function cancelarReservaV2(

@@ -1,6 +1,7 @@
 import {
   EstadoAgendaMedicion,
   EstadoBloqueo,
+  EstadoControlPreEntrega,
   EstadoReserva,
   EstadoTareaOperativa,
   EstadoUbicacionPrenda,
@@ -10,12 +11,29 @@ import {
   TipoTareaOperativa,
 } from "@/lib/domain/reservas/types";
 
+export function getEstadoControlPreEntregaLabel(
+  estado: EstadoControlPreEntrega,
+): string {
+  switch (estado) {
+    case "APROBADO":
+      return "Aprobado";
+    case "RECHAZADO":
+      return "Rechazado";
+    case "RESUELTO":
+      return "Resuelto";
+    default:
+      return estado;
+  }
+}
+
 export function getEstadoReservaLabel(estado: EstadoReserva): string {
   switch (estado) {
     case "PENDIENTE":
       return "Pendiente";
     case "CONFIRMADA":
       return "Confirmada";
+    case "LISTO_PARA_ENTREGAR":
+      return "Listo para entregar";
     case "EN_CURSO":
       return "En curso";
     case "COMPLETADA":

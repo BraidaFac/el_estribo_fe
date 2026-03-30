@@ -1,6 +1,7 @@
 "use client";
 
 import ConfirmModal from "@/lib/components/ConfirmModal";
+import { DevolucionRecepcionModal } from "@/lib/components/reservas/DevolucionRecepcionModal";
 import {
     resumenLavanderiasReservaDetalle,
     resumenModistasReservaDetalle,
@@ -14,7 +15,6 @@ import { useConfirmDestructive } from "@/lib/hooks/useConfirmDestructive";
 import {
     actualizarReservaV2,
     cancelarReservaV2,
-    marcarReservaDevuelta,
     marcarReservaRetirada,
 } from "@/lib/services/v2";
 import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
@@ -48,12 +48,15 @@ type ReservationActionsDialogProps = {
 
 function canRetirar(reserva: Reserva): boolean {
   if (reserva.accionesPermitidas) return reserva.accionesPermitidas.retirar.permitida;
-  return reserva.estadoReserva === "CONFIRMADA";
+  return reserva.estadoReserva === "LISTO_PARA_ENTREGAR";
 }
 
 function canCancelar(reserva: Reserva): boolean {
   if (reserva.accionesPermitidas) return reserva.accionesPermitidas.cancelar.permitida;
-  return reserva.estadoReserva === "CONFIRMADA";
+  return (
+    reserva.estadoReserva === "CONFIRMADA" ||
+    reserva.estadoReserva === "LISTO_PARA_ENTREGAR"
+  );
 }
 
 function canDevolver(reserva: Reserva): boolean {
@@ -70,6 +73,8 @@ function getEstadoClass(estado: Reserva["estadoReserva"]): string {
   switch (estado) {
     case "CONFIRMADA":
       return "bg-emerald-100 text-emerald-800 border border-emerald-200";
+    case "LISTO_PARA_ENTREGAR":
+      return "bg-violet-100 text-violet-900 border border-violet-200";
     case "EN_CURSO":
       return "bg-sky-100 text-sky-800 border border-sky-200";
     case "COMPLETADA":
@@ -91,6 +96,7 @@ export function ReservationActionsDialog({
   const { confirmModalRef, confirmDestructive } = useConfirmDestructive();
   const [editingReserva, setEditingReserva] = useState<Reserva | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [devolucionModalReserva, setDevolucionModalReserva] = useState<Reserva | null>(null);
   const [editForm, setEditForm] = useState<{
     clienteNombre: string;
     clienteDni: string;
@@ -119,17 +125,6 @@ export function ReservationActionsDialog({
     try {
       await marcarReservaRetirada(reserva.id);
       toast.success(`Reserva #${reserva.id} marcada como retirada`);
-      onOpenChange(false);
-      await refresh();
-    } catch (error) {
-      toast.error(getUserFacingErrorMessage(error));
-    }
-  };
-
-  const handleDevolver = async (reserva: Reserva) => {
-    try {
-      await marcarReservaDevuelta(reserva.id);
-      toast.success(`Reserva #${reserva.id} marcada como devuelta`);
       onOpenChange(false);
       await refresh();
     } catch (error) {
@@ -194,6 +189,20 @@ export function ReservationActionsDialog({
   return (
     <>
       <ConfirmModal ref={confirmModalRef} />
+      <DevolucionRecepcionModal
+        isOpen={devolucionModalReserva != null}
+        onOpenChange={(open) => {
+          if (!open) setDevolucionModalReserva(null);
+        }}
+        reservaId={devolucionModalReserva?.id ?? null}
+        numeroReservaLabel={
+          devolucionModalReserva != null ? `#${devolucionModalReserva.id}` : ""
+        }
+        onGuardado={async () => {
+          onOpenChange(false);
+          await refresh();
+        }}
+      />
 
       <Modal
         isOpen={isOpen}
@@ -301,7 +310,7 @@ export function ReservationActionsDialog({
                       {reserva.observaciones?.trim() ? reserva.observaciones : "Sin observaciones"}
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-pastel-border pt-3">
-                      {reserva.estadoReserva === "CONFIRMADA" && (
+                      {reserva.estadoReserva === "LISTO_PARA_ENTREGAR" && (
                         <Button
                           size="sm"
                           color="primary"
@@ -316,7 +325,7 @@ export function ReservationActionsDialog({
                           size="sm"
                           color="secondary"
                           isDisabled={!canDevolver(reserva)}
-                          onPress={() => handleDevolver(reserva)}
+                          onPress={() => setDevolucionModalReserva(reserva)}
                         >
                           Registrar devolución en el local
                         </Button>
@@ -326,7 +335,8 @@ export function ReservationActionsDialog({
                           Editar reserva
                         </Button>
                       )}
-                      {reserva.estadoReserva === "CONFIRMADA" && (
+                      {(reserva.estadoReserva === "CONFIRMADA" ||
+                        reserva.estadoReserva === "LISTO_PARA_ENTREGAR") && (
                         <Button
                           size="sm"
                           color="danger"
@@ -338,7 +348,7 @@ export function ReservationActionsDialog({
                         </Button>
                       )}
                     </div>
-                    {reserva.estadoReserva === "CONFIRMADA" &&
+                    {reserva.estadoReserva === "LISTO_PARA_ENTREGAR" &&
                       !canRetirar(reserva) &&
                       reserva.accionesPermitidas?.retirar.motivo && (
                         <p className="mt-2 text-xs text-amber-700">

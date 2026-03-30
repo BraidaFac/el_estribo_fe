@@ -6,9 +6,12 @@ export type CondicionPrenda = "LIMPIA" | "SUCIA" | "REQUIERE_REVISION";
 export type EstadoReserva =
   | "PENDIENTE"
   | "CONFIRMADA"
+  | "LISTO_PARA_ENTREGAR"
   | "EN_CURSO"
   | "COMPLETADA"
   | "CANCELADA";
+
+export type EstadoControlPreEntrega = "APROBADO" | "RECHAZADO" | "RESUELTO";
 
 export type EstadoUbicacionPrenda =
   | "TIENDA"
@@ -100,6 +103,8 @@ export interface AsignacionServicioReserva {
 
 export interface Reserva {
   id: number;
+  /** Alta de la reserva (API puede incluirlo en listados). */
+  createdAt?: string;
   fechaReserva: string;
   estadoReserva: EstadoReserva;
   saco: Saco;

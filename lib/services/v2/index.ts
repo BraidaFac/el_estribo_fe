@@ -1,3 +1,4 @@
+export * from "./control-pre-entrega-v2.service";
 export * from "./bloqueos-v2.service";
 export * from "./calendario-laboral-v2.service";
 export * from "./configuracion-general-v2.service";

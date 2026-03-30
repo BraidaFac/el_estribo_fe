@@ -1,6 +1,7 @@
 "use client";
 
 import ConfirmModal from "@/lib/components/ConfirmModal";
+import { DevolucionRecepcionModal } from "@/lib/components/reservas/DevolucionRecepcionModal";
 import { EnvioLavanderiaReservaModal } from "@/lib/components/planillas/EnvioLavanderiaReservaModal";
 import { EnvioModistaReservaModal } from "@/lib/components/planillas/EnvioModistaReservaModal";
 import { ApiDateField } from "@/lib/components/ui/ApiDateField";
@@ -25,7 +26,6 @@ import {
 import {
   listarReservasRango,
   listarTareasOperativas,
-  marcarReservaDevuelta,
   marcarReservaRetirada,
 } from "@/lib/services/v2";
 import {
@@ -100,6 +100,7 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
   const [lavModalPantalon, setLavModalPantalon] = useState(false);
   const [modModalReservaId, setModModalReservaId] = useState<number | null>(null);
   const [modModalPantalon, setModModalPantalon] = useState(false);
+  const [devolucionModalReserva, setDevolucionModalReserva] = useState<Reserva | null>(null);
 
   const canSearch = !!desde && !!hasta;
 
@@ -132,7 +133,9 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
   const visibleReservas = useMemo(() => {
     if (mode !== "DEVOLUCIONES_CLIENTES" && mode !== "RETIROS_CLIENTES") return [];
     return reservas.filter((r) =>
-      mode === "DEVOLUCIONES_CLIENTES" ? r.estadoReserva === "EN_CURSO" : r.estadoReserva === "CONFIRMADA",
+      mode === "DEVOLUCIONES_CLIENTES"
+        ? r.estadoReserva === "EN_CURSO"
+        : r.estadoReserva === "LISTO_PARA_ENTREGAR",
     );
   }, [mode, reservas]);
 
@@ -267,16 +270,6 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
     })();
   };
 
-  const handleDevolucionCliente = async (reserva: Reserva) => {
-    try {
-      await marcarReservaDevuelta(reserva.id);
-      toast.success("Reserva marcada como devuelta");
-      await handleSearch();
-    } catch (error) {
-      toast.error(getUserFacingErrorMessage(error));
-    }
-  };
-
   const renderCeldaPrendas = (grupo: GrupoTareasReserva) => (
     <ul className="list-inside list-none text-sm flex flex-col gap-1">
       {grupo.tareas.map((row) => (
@@ -329,6 +322,17 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
         }}
         reservaId={modModalReservaId}
         tienePantalon={modModalPantalon}
+        onGuardado={() => void handleSearch()}
+      />
+      <DevolucionRecepcionModal
+        isOpen={devolucionModalReserva != null}
+        onOpenChange={(open) => {
+          if (!open) setDevolucionModalReserva(null);
+        }}
+        reservaId={devolucionModalReserva?.id ?? null}
+        numeroReservaLabel={
+          devolucionModalReserva != null ? `#${devolucionModalReserva.id}` : ""
+        }
         onGuardado={() => void handleSearch()}
       />
 
@@ -503,7 +507,7 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
                     <Button
                       size="sm"
                       color="secondary"
-                      onPress={() => void handleDevolucionCliente(row)}
+                      onPress={() => setDevolucionModalReserva(row)}
                     >
                       Registrar devolución en el local
                     </Button>

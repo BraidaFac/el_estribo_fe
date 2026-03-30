@@ -47,8 +47,8 @@ const URGENCIA_LABEL: Record<DashboardUrgencia, string> = {
 };
 
 const URGENCIA_ORDER: DashboardUrgencia[] = [
-  "VENCIDA",
   "HOY",
+  "VENCIDA",
   "PROXIMA",
   "FUTURA",
   "SIN_FECHA",
@@ -59,7 +59,7 @@ function chipColorUrgencia(
 ): "danger" | "warning" | "primary" | "default" | "secondary" {
   if (u === "VENCIDA") return "danger";
   if (u === "HOY") return "warning";
-  if (u === "PROXIMA") return "primary";
+  if (u === "PROXIMA") return "secondary";
   if (u === "FUTURA") return "default";
   return "secondary";
 }
@@ -128,11 +128,6 @@ export function DashboardOperativoPage() {
             <h1 className="text-2xl font-semibold text-pastel-text">
               Panel operativo
             </h1>
-            <p className="mt-1 max-w-2xl text-sm text-pastel-text/80">
-              Reservas de la semana y tareas pendientes del negocio, ordenadas por
-              urgencia y fecha. Desde cada ítem podés ir al calendario o a la
-              planilla correspondiente.
-            </p>
           </div>
           <Button
             color="primary"
@@ -149,16 +144,18 @@ export function DashboardOperativoPage() {
             <Chip size="sm" variant="flat" className="text-pastel-text">
               Total {data.resumen.total}
             </Chip>
-            {data.resumen.vencidas > 0 && (
-              <Chip color="danger" size="sm" variant="flat">
-                {data.resumen.vencidas} vencidas
-              </Chip>
-            )}
             {data.resumen.hoy > 0 && (
               <Chip color="warning" size="sm" variant="flat">
                 {data.resumen.hoy} hoy
               </Chip>
             )}
+
+            {data.resumen.vencidas > 0 && (
+              <Chip color="danger" size="sm" variant="flat">
+                {data.resumen.vencidas} vencidas
+              </Chip>
+            )}
+
             {data.resumen.proximas > 0 && (
               <Chip color="primary" size="sm" variant="flat">
                 {data.resumen.proximas} próx. 7 días
@@ -183,7 +180,12 @@ export function DashboardOperativoPage() {
               Por tipo
             </span>
             {topTipos.map(([key, n]) => (
-              <Chip key={key} size="sm" variant="bordered" className="text-pastel-text">
+              <Chip
+                key={key}
+                size="sm"
+                variant="bordered"
+                className="text-pastel-text"
+              >
                 {(CATEGORIA_LABEL as Record<string, string>)[key] ?? key}: {n}
               </Chip>
             ))}
@@ -197,15 +199,17 @@ export function DashboardOperativoPage() {
         </div>
       ) : data ? (
         <div className="space-y-8">
-          <ProximasReservasSection reservas={data.proximasReservas7Dias ?? []} />
+          <ProximasReservasSection
+            reservas={data.proximasReservas7Dias ?? []}
+          />
           {!data.items.length ? (
             <div className="rounded-lg border border-dashed border-pastel-border bg-pastel-surface/60 p-8 text-center text-pastel-text/80">
               <p className="font-medium text-pastel-text">
                 No hay tareas operativas pendientes
               </p>
               <p className="mt-1 text-sm">
-                Cuando haya envíos, retiros, citas o acciones de clientes, aparecerán
-                en las secciones de abajo.
+                Cuando haya envíos, retiros, citas o acciones de clientes,
+                aparecerán en las secciones de abajo.
               </p>
             </div>
           ) : (
@@ -261,12 +265,16 @@ function ProximasReservasSection({
         </Button>
       </div>
       {reservas.length === 0 ? (
-        <p className="text-sm text-pastel-text/70">No hay reservas en este rango.</p>
+        <p className="text-sm text-pastel-text/70">
+          No hay reservas en este rango.
+        </p>
       ) : (
         <Table aria-label="Próximas reservas en los próximos siete días">
-            <TableHeader>
+          <TableHeader>
             <TableColumn className={TABLE_HEADER_CLASS}>Reserva #</TableColumn>
-            <TableColumn className={TABLE_HEADER_CLASS}>Fecha reserva</TableColumn>
+            <TableColumn className={TABLE_HEADER_CLASS}>
+              Fecha reserva
+            </TableColumn>
             <TableColumn className={TABLE_HEADER_CLASS}>Estado</TableColumn>
             <TableColumn className={TABLE_HEADER_CLASS}>Cliente</TableColumn>
             <TableColumn className={TABLE_HEADER_CLASS}>Saco</TableColumn>
@@ -285,7 +293,9 @@ function ProximasReservasSection({
                 <TableCell>{r.clienteNombre}</TableCell>
                 <TableCell>{`${r.saco.codigo} (${r.saco.marca})`}</TableCell>
                 <TableCell>
-                  {r.pantalon ? `${r.pantalon.codigo} (${r.pantalon.marca})` : "—"}
+                  {r.pantalon
+                    ? `${r.pantalon.codigo} (${r.pantalon.marca})`
+                    : "—"}
                 </TableCell>
               </TableRow>
             ))}
@@ -304,7 +314,9 @@ function DashboardRow({ item }: { item: DashboardItem }) {
     <li className="flex flex-col gap-2 rounded-lg border border-pastel-border bg-pastel-surface p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-pastel-text">{item.titulo}</span>
+          <span className="text-sm font-medium text-pastel-text">
+            {item.titulo}
+          </span>
           <Chip size="sm" variant="bordered" className="text-pastel-text">
             {CATEGORIA_LABEL[item.categoria]}
           </Chip>
@@ -319,18 +331,15 @@ function DashboardRow({ item }: { item: DashboardItem }) {
         ) : null}
         <div className="space-y-0.5 text-xs">
           <p className="text-pastel-text/60">
-            <span className="font-medium text-pastel-text/70">Fecha tarea: </span>{" "}
-           {formatFechaRef(item.fechaReferencia)}
+            <span className="font-medium text-pastel-text/70">
+              Fecha tarea:{" "}
+            </span>{" "}
+            {formatFechaRef(item.fechaReferencia)}
             {item.reservaId != null ? ` · Reserva #${item.reservaId}` : null}
           </p>
           {fechaReservaTraje != null ? (
             <p className="font-medium text-teal-700 dark:text-teal-400">
-              Día de la reserva (traje): {formatFechaRef(fechaReservaTraje)}
-              {soloFecha(item.fechaReferencia) === soloFecha(fechaReservaTraje) ? (
-                <span className="ml-1 font-normal text-pastel-text/55">
-                  (mismo día que el objetivo)
-                </span>
-              ) : null}
+              Día de la reserva: {formatFechaRef(fechaReservaTraje)}
             </p>
           ) : null}
         </div>
