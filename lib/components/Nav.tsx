@@ -162,6 +162,10 @@ const CONFIG_ITEMS_BY_ROLE: Record<Role, NavItem[]> = {
       label: "Accesorios",
       href: "/configuracion/accesorios",
     },
+    { key: "lavanderias", label: "Lavanderias", href: "/lavanderias" },
+    { key: "modistas", label: "Modistas", href: "/modistas" },
+    { key: "sacos", label: "Sacos", href: "/sacos" },
+    { key: "pantalones", label: "Pantalones", href: "/pantalones" },
   ],
 };
 
