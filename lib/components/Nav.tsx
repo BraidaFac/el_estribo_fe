@@ -179,7 +179,13 @@ const Nav = () => {
   const [isPlanillasOpen, setIsPlanillasOpen] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const role = getRole(user?.role ?? Role.USER);
-  const configItems = useMemo(() => CONFIG_ITEMS_BY_ROLE[role], [role]);
+  const configItems = useMemo(
+    () =>
+      [...CONFIG_ITEMS_BY_ROLE[role]].sort((a, b) =>
+        a.label.localeCompare(b.label),
+      ),
+    [role],
+  );
 
   /** Misma regla que Tailwind `md:` (768px): al pasar a escritorio, cerrar el drawer. */
   useEffect(() => {
