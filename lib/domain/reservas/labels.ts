@@ -28,8 +28,6 @@ export function getEstadoControlPreEntregaLabel(
 
 export function getEstadoReservaLabel(estado: EstadoReserva): string {
   switch (estado) {
-    case "PENDIENTE":
-      return "Pendiente";
     case "CONFIRMADA":
       return "Confirmada";
     case "LISTO_PARA_ENTREGAR":
