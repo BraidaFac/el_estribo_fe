@@ -118,8 +118,8 @@ export function AccesoriosRetiroModal({
                         onClick={() => toggleAccesorio(a)}
                         className={`flex flex-col items-center gap-1.5 rounded-lg border px-3 py-3 text-center transition-colors ${
                           isSelected
-                            ? "border-pastel-primary bg-pastel-primary/10 text-pastel-primary"
-                            : "border-pastel-border bg-pastel-surface text-pastel-text hover:border-pastel-primary/50"
+                            ? "border-pastel-secondary bg-pastel-secondary/20 text-pastel-text ring-1 ring-pastel-secondary"
+                            : "border-pastel-border bg-pastel-surface text-pastel-text hover:border-pastel-secondary/50"
                         }`}
                       >
                         <Icon className="h-6 w-6" aria-hidden />

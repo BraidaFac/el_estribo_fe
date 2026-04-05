@@ -2,6 +2,32 @@ import type { EstadoControlPreEntrega } from "@/lib/domain/reservas/types";
 
 export type { EstadoControlPreEntrega };
 
+export type MotivoRechazoPreEntrega =
+  | "AROMA"
+  | "PLANCHADO"
+  | "SASTRERIA"
+  | "HIGIENE"
+  | "COMPLEMENTOS"
+  | "OTRO";
+
+export const MOTIVOS_RECHAZO_LABELS: Record<MotivoRechazoPreEntrega, string> = {
+  AROMA: "Aroma",
+  PLANCHADO: "Planchado",
+  SASTRERIA: "Sastrería",
+  HIGIENE: "Higiene",
+  COMPLEMENTOS: "Complementos",
+  OTRO: "Otro",
+};
+
+export const TODOS_LOS_MOTIVOS: MotivoRechazoPreEntrega[] = [
+  "AROMA",
+  "PLANCHADO",
+  "SASTRERIA",
+  "HIGIENE",
+  "COMPLEMENTOS",
+  "OTRO",
+];
+
 export type PlanillaPrepararFila = {
   reservaId: number;
   fechaReserva: string;
@@ -16,7 +42,7 @@ export type RechazoPreEntregaFila = {
   reservaId: number;
   fechaReserva: string;
   clienteNombre: string;
-  motivoRechazo: string | null;
+  motivosRechazo: MotivoRechazoPreEntrega[] | null;
   creadoPorNombre: string | null;
   estado: EstadoControlPreEntrega;
   createdAt: string;
@@ -35,7 +61,7 @@ export type CreateControlPreEntregaPayload = {
   complementosScore: number;
   complementosObs?: string;
   estado: "APROBADO" | "RECHAZADO";
-  motivoRechazo?: string;
+  motivosRechazo?: MotivoRechazoPreEntrega[];
 };
 
 /** Registro persistido (lectura desde detalle operativo). */
@@ -52,7 +78,7 @@ export type ControlPreEntregaRecord = {
   complementosScore: number;
   complementosObs: string | null;
   estado: EstadoControlPreEntrega;
-  motivoRechazo: string | null;
+  motivosRechazo: MotivoRechazoPreEntrega[] | null;
   creadoPor: { id: string; name: string } | null;
   createdAt: string;
   fechaResolucion: string | null;

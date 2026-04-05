@@ -6,6 +6,7 @@ import { MedicionesReservaModal } from "@/lib/components/medidas/MedicionesReser
 import { EnvioLavanderiaReservaModal } from "@/lib/components/planillas/EnvioLavanderiaReservaModal";
 import { EnvioModistaReservaModal } from "@/lib/components/planillas/EnvioModistaReservaModal";
 import { DevolucionRecepcionModal } from "@/lib/components/reservas/DevolucionRecepcionModal";
+import { RecordatorioRetiroModal } from "@/lib/components/planillas/RecordatorioRetiroModal";
 import { ApiDateField } from "@/lib/components/ui/ApiDateField";
 import {
   resumenLavanderiasReservaDetalle,
@@ -129,6 +130,8 @@ export function PlanillaOperacionesPage({
   const [accesorios, setAccesorios] = useState<AccesorioItem[]>([]);
   const [loadingAccesorios, setLoadingAccesorios] = useState(false);
   const [retiroConfirming, setRetiroConfirming] = useState(false);
+  const [recordatorioOpen, setRecordatorioOpen] = useState(false);
+  const [retiroPendingReserva, setRetiroPendingReserva] = useState<Reserva | null>(null);
 
   const canSearch = !!desde && !!hasta;
 
@@ -277,8 +280,23 @@ export function PlanillaOperacionesPage({
     try {
       setRetiroConfirming(true);
       await setExtrasReserva(retiroAccesoriosReserva.id, { extras });
-      await ejecutarRetiroCliente(retiroAccesoriosReserva);
+      setRetiroPendingReserva(retiroAccesoriosReserva);
       setRetiroAccesoriosReserva(null);
+      setRecordatorioOpen(true);
+    } catch (error) {
+      toast.error(getUserFacingErrorMessage(error));
+    } finally {
+      setRetiroConfirming(false);
+    }
+  };
+
+  const handleConfirmarRecordatorio = async () => {
+    if (!retiroPendingReserva) return;
+    try {
+      setRetiroConfirming(true);
+      await ejecutarRetiroCliente(retiroPendingReserva);
+      setRetiroPendingReserva(null);
+      setRecordatorioOpen(false);
     } catch (error) {
       toast.error(getUserFacingErrorMessage(error));
     } finally {
@@ -406,6 +424,16 @@ export function PlanillaOperacionesPage({
         confirming={retiroConfirming}
         onConfirm={(extras) => void handleConfirmarRetiroConExtras(extras)}
         onCancel={() => setRetiroAccesoriosReserva(null)}
+      />
+
+      <RecordatorioRetiroModal
+        isOpen={recordatorioOpen}
+        confirming={retiroConfirming}
+        onConfirm={() => void handleConfirmarRecordatorio()}
+        onCancel={() => {
+          setRecordatorioOpen(false);
+          setRetiroPendingReserva(null);
+        }}
       />
 
       <div className="rounded-lg border border-pastel-border bg-pastel-surface p-4">

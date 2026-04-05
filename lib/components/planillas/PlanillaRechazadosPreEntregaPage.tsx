@@ -3,6 +3,7 @@
 import ConfirmModal from "@/lib/components/ConfirmModal";
 import { getEstadoControlPreEntregaLabel } from "@/lib/domain/reservas/labels";
 import type { RechazoPreEntregaFila } from "@/lib/domain/control-pre-entrega/types";
+import { MOTIVOS_RECHAZO_LABELS } from "@/lib/domain/control-pre-entrega/types";
 import { cancelarReservaV2 } from "@/lib/services/v2/reservas-v2.service";
 import {
   fetchRechazadosPreEntrega,
@@ -158,7 +159,11 @@ export function PlanillaRechazadosPreEntregaPage() {
                 <TableCell>{fila.clienteNombre}</TableCell>
                 <TableCell>{formatApiDateForUi(fila.fechaReserva)}</TableCell>
                 <TableCell className="max-w-[14rem] whitespace-normal text-sm">
-                  {fila.motivoRechazo ?? "—"}
+                  {fila.motivosRechazo?.length
+                    ? fila.motivosRechazo
+                        .map((m) => MOTIVOS_RECHAZO_LABELS[m])
+                        .join(", ")
+                    : "—"}
                 </TableCell>
                 <TableCell>{fila.creadoPorNombre ?? "—"}</TableCell>
                 <TableCell>{getEstadoControlPreEntregaLabel(fila.estado)}</TableCell>

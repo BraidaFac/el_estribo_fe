@@ -1,10 +1,19 @@
 "use client";
 
-import type { CreateControlPreEntregaPayload } from "@/lib/domain/control-pre-entrega/types";
+import type {
+  CreateControlPreEntregaPayload,
+  MotivoRechazoPreEntrega,
+} from "@/lib/domain/control-pre-entrega/types";
+import {
+  MOTIVOS_RECHAZO_LABELS,
+  TODOS_LOS_MOTIVOS,
+} from "@/lib/domain/control-pre-entrega/types";
 import { crearControlPreEntrega } from "@/lib/services/v2/control-pre-entrega-v2.service";
 import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
 import {
   Button,
+  Checkbox,
+  CheckboxGroup,
   Modal,
   ModalBody,
   ModalContent,
@@ -39,7 +48,7 @@ const emptyForm = () => ({
   higieneObs: "",
   complementosObs: "",
   resultado: "APROBADO" as "APROBADO" | "RECHAZADO",
-  motivoRechazo: "",
+  motivosRechazo: [] as MotivoRechazoPreEntrega[],
 });
 
 export function ControlPreEntregaModal({
@@ -75,8 +84,8 @@ export function ControlPreEntregaModal({
 
   const handleSubmit = async () => {
     if (reservaId == null) return;
-    if (form.resultado === "RECHAZADO" && !form.motivoRechazo.trim()) {
-      toast.error("El motivo de rechazo es obligatorio");
+    if (form.resultado === "RECHAZADO" && form.motivosRechazo.length === 0) {
+      toast.error("Seleccioná al menos un motivo de rechazo");
       return;
     }
     const payload: CreateControlPreEntregaPayload = {
@@ -92,8 +101,8 @@ export function ControlPreEntregaModal({
       higieneObs: form.higieneObs.trim() || undefined,
       complementosObs: form.complementosObs.trim() || undefined,
       estado: form.resultado,
-      motivoRechazo:
-        form.resultado === "RECHAZADO" ? form.motivoRechazo.trim() : undefined,
+      motivosRechazo:
+        form.resultado === "RECHAZADO" ? form.motivosRechazo : undefined,
     };
     try {
       setSaving(true);
@@ -213,6 +222,7 @@ export function ControlPreEntregaModal({
                   setForm((f) => ({
                     ...f,
                     resultado: v as "APROBADO" | "RECHAZADO",
+                    motivosRechazo: [],
                   }))
                 }
                 orientation="horizontal"
@@ -222,21 +232,36 @@ export function ControlPreEntregaModal({
               </RadioGroup>
 
               {form.resultado === "RECHAZADO" ? (
-                <Textarea
-                  label="Motivo del rechazo"
+                <CheckboxGroup
+                  label="Motivos del rechazo (seleccioná al menos uno)"
+                  value={form.motivosRechazo}
+                  onValueChange={(v) =>
+                    setForm((f) => ({
+                      ...f,
+                      motivosRechazo: v as MotivoRechazoPreEntrega[],
+                    }))
+                  }
                   isRequired
-                  minRows={2}
-                  value={form.motivoRechazo}
-                  onValueChange={(v) => setForm((f) => ({ ...f, motivoRechazo: v }))}
-                />
+                  orientation="horizontal"
+                  classNames={{ label: "text-sm text-pastel-text/80" }}
+                >
+                  {TODOS_LOS_MOTIVOS.map((m) => (
+                    <Checkbox key={m} value={m}>
+                      {MOTIVOS_RECHAZO_LABELS[m]}
+                    </Checkbox>
+                  ))}
+                </CheckboxGroup>
               ) : null}
-
             </ModalBody>
             <ModalFooter>
               <Button variant="flat" onPress={onClose}>
                 Cerrar
               </Button>
-              <Button color="primary" isLoading={saving} onPress={() => void handleSubmit()}>
+              <Button
+                color="primary"
+                isLoading={saving}
+                onPress={() => void handleSubmit()}
+              >
                 Guardar control
               </Button>
             </ModalFooter>

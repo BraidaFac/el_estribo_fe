@@ -2,6 +2,7 @@
 
 import ConfirmModal from "@/lib/components/ConfirmModal";
 import {
+  ACCESORIOS_ICON_LABELS,
   ACCESORIOS_ICON_OPTIONS,
   getAccesorioIcon,
 } from "@/lib/domain/accesorios/iconosAccesorios";
@@ -49,7 +50,7 @@ type ModalMode =
   | { mode: "create" }
   | { mode: "edit"; accesorio: AccesorioItem };
 
-const EMPTY_FORM: AccesorioForm = { nombre: "", icono: "TagIcon" };
+const EMPTY_FORM: AccesorioForm = { nombre: "", icono: "TbHanger" };
 
 export function AccesoriosPage() {
   const { confirmModalRef, confirmDestructive } = useConfirmDestructive();
@@ -185,7 +186,7 @@ export function AccesoriosPage() {
                             <Icon className="h-4 w-4" aria-hidden />
                           }
                         >
-                          {key.replace("Icon", "")}
+                          {ACCESORIOS_ICON_LABELS[key] ?? key}
                         </SelectItem>
                       );
                     })}
@@ -243,7 +244,7 @@ export function AccesoriosPage() {
                     <div className="flex items-center gap-2">
                       <Icon className="h-5 w-5 text-pastel-text/70" aria-hidden />
                       <span className="text-sm text-pastel-text/60">
-                        {a.icono.replace("Icon", "")}
+                        {ACCESORIOS_ICON_LABELS[a.icono] ?? a.icono}
                       </span>
                     </div>
                   </TableCell>

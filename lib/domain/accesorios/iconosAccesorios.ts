@@ -1,38 +1,60 @@
+import type { IconType } from "react-icons";
 import {
-  AcademicCapIcon,
-  BriefcaseIcon,
-  GiftIcon,
-  HeartIcon,
-  PaperClipIcon,
-  ScissorsIcon,
-  ShoppingBagIcon,
-  SparklesIcon,
-  StarIcon,
-  SunIcon,
-  TagIcon,
-  WrenchScrewdriverIcon,
-} from "@heroicons/react/24/outline";
-import type { ComponentType, SVGProps } from "react";
+  GiArmoredPants,
+  GiBelt,
+  GiBowTie,
+  GiClothes,
+  GiFedora,
+  GiGloves,
+  GiLargeDress,
+  GiPoloShirt,
+  GiSunglasses,
+  GiTie,
+  GiTopHat,
+} from "react-icons/gi";
+import { FaGlasses, FaTshirt } from "react-icons/fa";
+import { TbHanger, TbShirt } from "react-icons/tb";
 
-export type HeroIconComponent = ComponentType<SVGProps<SVGSVGElement>>;
+export type { IconType };
 
-export const ACCESORIOS_ICON_MAP: Record<string, HeroIconComponent> = {
-  AcademicCapIcon,
-  BriefcaseIcon,
-  GiftIcon,
-  HeartIcon,
-  PaperClipIcon,
-  ScissorsIcon,
-  ShoppingBagIcon,
-  SparklesIcon,
-  StarIcon,
-  SunIcon,
-  TagIcon,
-  WrenchScrewdriverIcon,
+export const ACCESORIOS_ICON_MAP: Record<string, IconType> = {
+  GiTie,
+  GiBowTie,
+  GiBelt,
+  FaGlasses,
+  GiSunglasses,
+  GiTopHat,
+  GiFedora,
+  GiGloves,
+  TbHanger,
+  GiClothes,
+  FaTshirt,
+  GiLargeDress,
+  GiPoloShirt,
+  GiArmoredPants,
+  TbShirt,
+};
+
+export const ACCESORIOS_ICON_LABELS: Record<string, string> = {
+  GiTie: "Corbata",
+  GiBowTie: "Moño / corbatín",
+  GiBelt: "Cinturón",
+  FaGlasses: "Lentes",
+  GiSunglasses: "Anteojos de sol",
+  GiTopHat: "Sombrero formal",
+  GiFedora: "Sombrero casual",
+  GiGloves: "Guantes",
+  TbHanger: "Accesorios / prenda",
+  GiClothes: "Conjunto",
+  FaTshirt: "Camisa / remera",
+  GiLargeDress: "Traje formal",
+  GiPoloShirt: "Camisa formal",
+  GiArmoredPants: "Pantalón",
+  TbShirt: "Prenda superior",
 };
 
 export const ACCESORIOS_ICON_OPTIONS = Object.keys(ACCESORIOS_ICON_MAP);
 
-export function getAccesorioIcon(icono: string): HeroIconComponent {
-  return ACCESORIOS_ICON_MAP[icono] ?? TagIcon;
+export function getAccesorioIcon(icono: string): IconType {
+  return ACCESORIOS_ICON_MAP[icono] ?? TbHanger;
 }

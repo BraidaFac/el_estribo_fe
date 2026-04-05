@@ -1,6 +1,7 @@
 "use client";
 
 import type { ControlPreEntregaRecord } from "@/lib/domain/control-pre-entrega/types";
+import { MOTIVOS_RECHAZO_LABELS } from "@/lib/domain/control-pre-entrega/types";
 import type { AccesorioItem, ReservaExtraItem } from "@/lib/domain/accesorios/types";
 import { getAccesorioIcon } from "@/lib/domain/accesorios/iconosAccesorios";
 import type { EstadoReserva } from "@/lib/domain/reservas/types";
@@ -182,7 +183,14 @@ export function ControlPreEntregaVistaModal({
               </div>
               <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                 {fila("Resultado", getEstadoControlPreEntregaLabel(data.estado))}
-                {fila("Motivo rechazo", data.motivoRechazo)}
+                {fila(
+                  "Motivos rechazo",
+                  data.motivosRechazo?.length
+                    ? data.motivosRechazo
+                        .map((m) => MOTIVOS_RECHAZO_LABELS[m])
+                        .join(", ")
+                    : null,
+                )}
                 {fila("Auditor", data.creadoPor?.name ?? null)}
                 {fila("Registrado", formatApiDateTimeForUi(data.createdAt))}
                 {fila("Fecha resolución", data.fechaResolucion ?? null)}
@@ -223,8 +231,8 @@ export function ControlPreEntregaVistaModal({
                         onClick={() => toggleAccesorioEdit(a)}
                         className={`flex flex-col items-center gap-1.5 rounded-lg border px-3 py-3 text-center transition-colors ${
                           isSelected
-                            ? "border-pastel-primary bg-pastel-primary/10 text-pastel-primary"
-                            : "border-pastel-border bg-pastel-surface text-pastel-text hover:border-pastel-primary/50"
+                            ? "border-pastel-secondary bg-pastel-secondary/20 text-pastel-text ring-1 ring-pastel-secondary"
+                            : "border-pastel-border bg-pastel-surface text-pastel-text hover:border-pastel-secondary/50"
                         }`}
                       >
                         <Icon className="h-5 w-5" aria-hidden />

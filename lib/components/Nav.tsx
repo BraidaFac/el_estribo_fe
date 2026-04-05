@@ -44,6 +44,10 @@ const PRIMARY_NAV_ITEMS: NavItem[] = [
   },
 ];
 
+const ADMIN_PRIMARY_NAV_ITEMS: NavItem[] = [
+  { key: "analytics", label: "Estadística", href: "/analytics" },
+];
+
 /**
  * Planillas agrupadas por dominio (refactor operativo: lavandería / modista / clientes / medición).
  */
@@ -130,7 +134,9 @@ const PLANILLAS_NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-const PLANILLAS_MENU_ITEMS: NavItem[] = PLANILLAS_NAV_GROUPS.flatMap((g) => g.items);
+const PLANILLAS_MENU_ITEMS: NavItem[] = PLANILLAS_NAV_GROUPS.flatMap(
+  (g) => g.items,
+);
 
 /** Divide grupos en dos columnas equilibradas (p. ej. 3 + 2 con 5 grupos). */
 const PLANILLAS_SPLIT_INDEX = Math.ceil(PLANILLAS_NAV_GROUPS.length / 2);
@@ -206,6 +212,7 @@ const Nav = () => {
   const onMenuAction = (key: Key) => {
     const allItems = [
       ...PRIMARY_NAV_ITEMS,
+      ...ADMIN_PRIMARY_NAV_ITEMS,
       ...PLANILLAS_MENU_ITEMS,
       ...configItems,
     ];
@@ -233,7 +240,10 @@ const Nav = () => {
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
-          {PRIMARY_NAV_ITEMS.map((item) => (
+          {[
+            ...PRIMARY_NAV_ITEMS,
+            ...(role === Role.ADMIN ? ADMIN_PRIMARY_NAV_ITEMS : []),
+          ].map((item) => (
             <Button
               key={item.key}
               size="sm"
@@ -373,7 +383,10 @@ const Nav = () => {
                   Principal
                 </p>
                 <div className="flex flex-col gap-1.5">
-                  {PRIMARY_NAV_ITEMS.map((item) => (
+                  {[
+                    ...PRIMARY_NAV_ITEMS,
+                    ...(role === Role.ADMIN ? ADMIN_PRIMARY_NAV_ITEMS : []),
+                  ].map((item) => (
                     <Button
                       key={item.key}
                       fullWidth
