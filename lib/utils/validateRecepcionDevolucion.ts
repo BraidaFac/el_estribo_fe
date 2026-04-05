@@ -31,9 +31,5 @@ export function validateRecepcionDevolucionPayload(
     return "No informe monto por traje nuevo si el daño grave es OK";
   }
 
-  if (p.decisionLavado === "LIMPIEZA_LOCAL" && !p.responsableLimpiezaLocal?.trim()) {
-    return "Indique el responsable de limpieza local";
-  }
-
   return null;
 }

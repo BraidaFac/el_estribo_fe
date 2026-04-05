@@ -14,10 +14,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@heroui/react";
+import { deleteCookie } from "cookies-next";
 import { usePathname, useRouter } from "next/navigation";
 import { Key, useEffect, useMemo, useState } from "react";
 import { Role } from "../services/auth.service";
-import actions from "../utils/cookies";
 import { useAppContext } from "./AppContext";
 import Logo from "./Logo/Logo";
 
@@ -144,9 +144,25 @@ const CONFIG_ITEMS_BY_ROLE: Record<Role, NavItem[]> = {
     { key: "sacos", label: "Sacos", href: "/sacos" },
     { key: "pantalones", label: "Pantalones", href: "/pantalones" },
     { key: "feriados", label: "Feriados", href: "/configuracion/feriados" },
-    { key: "configuracion", label: "Configuracion del sistema", href: "/configuracion" },
+    {
+      key: "configuracion",
+      label: "Configuracion del sistema",
+      href: "/configuracion",
+    },
+    { key: "empleados", label: "Empleados", href: "/configuracion/empleados" },
+    {
+      key: "accesorios",
+      label: "Accesorios",
+      href: "/configuracion/accesorios",
+    },
   ],
-  [Role.USER]: [],
+  [Role.USER]: [
+    {
+      key: "accesorios",
+      label: "Accesorios",
+      href: "/configuracion/accesorios",
+    },
+  ],
 };
 
 function getRole(role: string): Role {
@@ -193,7 +209,7 @@ const Nav = () => {
   };
 
   const onLogout = () => {
-    actions.removeItem("Authorization");
+    deleteCookie("Authorization");
     setUser(null);
     setIsMobileOpen(false);
     router.push("/login");

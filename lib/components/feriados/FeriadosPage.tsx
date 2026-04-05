@@ -9,6 +9,7 @@ import {
   eliminarFeriado,
   listarFeriados,
 } from "@/lib/services/v2/feriados-v2.service";
+import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
 import {
   ACTION_BUTTON_BASE_CLASS,
   ACTION_BUTTON_CLASSES,
@@ -79,7 +80,7 @@ export function FeriadosPage() {
       const data = await listarFeriados(anoParsed);
       setRows(data);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No se pudo cargar feriados");
+      toast.error(getUserFacingErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -129,7 +130,7 @@ export function FeriadosPage() {
       onOpenChange();
       resetForm();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No se pudo guardar el feriado");
+      toast.error(getUserFacingErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -147,7 +148,7 @@ export function FeriadosPage() {
           toast.success("Feriado eliminado");
           await refresh();
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : "No se pudo eliminar el feriado");
+          toast.error(getUserFacingErrorMessage(error));
           throw error;
         }
       },

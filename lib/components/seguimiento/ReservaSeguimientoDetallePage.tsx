@@ -1,5 +1,6 @@
 "use client";
 
+import { MedicionesReservaModal } from "@/lib/components/medidas/MedicionesReservaModal";
 import { ControlPreEntregaVistaModal } from "@/lib/components/seguimiento/ControlPreEntregaVistaModal";
 import { RecepcionDevolucionVistaModal } from "@/lib/components/seguimiento/RecepcionDevolucionVistaModal";
 import { resumenLavanderiasReservaDetalle, resumenModistasReservaDetalle } from "@/lib/domain/reservas/asignacionesServicio";
@@ -67,6 +68,7 @@ export function ReservaSeguimientoDetallePage() {
   const [detalle, setDetalle] = useState<Awaited<
     ReturnType<typeof obtenerDetalleOperativoReserva>
   > | null>(null);
+  const [openMediciones, setOpenMediciones] = useState(false);
   const [openPreEntrega, setOpenPreEntrega] = useState(false);
   const [openRecepcion, setOpenRecepcion] = useState(false);
 
@@ -127,6 +129,9 @@ export function ReservaSeguimientoDetallePage() {
          
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="flat" onPress={() => setOpenMediciones(true)}>
+            Ver Mediciones
+          </Button>
           <Button size="sm" color="primary" variant="flat" onPress={() => setOpenPreEntrega(true)}>
             Ver entrega
           </Button>
@@ -224,18 +229,28 @@ export function ReservaSeguimientoDetallePage() {
         </Table>
       </section>
 
+      <MedicionesReservaModal
+        isOpen={openMediciones}
+        onOpenChange={setOpenMediciones}
+        reservaId={reservaId}
+        tienePantalon={reserva.pantalon != null}
+        readOnly
+      />
       <ControlPreEntregaVistaModal
         isOpen={openPreEntrega}
         onOpenChange={setOpenPreEntrega}
         numeroReservaLabel={numeroLabel}
         clienteNombre={reserva.clienteNombre}
         data={controlPreEntrega}
+        reservaId={reservaId}
+        estadoReserva={reserva.estadoReserva}
       />
       <RecepcionDevolucionVistaModal
         isOpen={openRecepcion}
         onOpenChange={setOpenRecepcion}
         numeroReservaLabel={numeroLabel}
         data={recepcionDevolucion}
+        reservaId={reservaId}
       />
     </div>
   );

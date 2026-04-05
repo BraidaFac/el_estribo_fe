@@ -4,6 +4,7 @@ import {
   actualizarConfiguracionGeneral,
   obtenerConfiguracionGeneral,
 } from "@/lib/services/v2";
+import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
 import { Button, Input, Spinner } from "@heroui/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ type FormState = {
   diasModista: string;
   diasTomarMediciones: string;
   cantidadDiasPermitidoRetiro: string;
+  dashboardDiasProximasReservas: string;
 };
 
 export default function ConfiguracionPage() {
@@ -21,6 +23,7 @@ export default function ConfiguracionPage() {
     diasModista: "",
     diasTomarMediciones: "",
     cantidadDiasPermitidoRetiro: "",
+    dashboardDiasProximasReservas: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -35,13 +38,12 @@ export default function ConfiguracionPage() {
           diasModista: String(data.diasModista),
           diasTomarMediciones: String(data.diasTomarMediciones),
           cantidadDiasPermitidoRetiro: String(data.cantidadDiasPermitidoRetiro),
+          dashboardDiasProximasReservas: String(
+            data.dashboardDiasProximasReservas,
+          ),
         });
       } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "No se pudo cargar la configuracion",
-        );
+        toast.error(getUserFacingErrorMessage(error));
       } finally {
         setIsLoading(false);
       }
@@ -54,6 +56,7 @@ export default function ConfiguracionPage() {
       diasModista: Number(form.diasModista),
       diasTomarMediciones: Number(form.diasTomarMediciones),
       cantidadDiasPermitidoRetiro: Number(form.cantidadDiasPermitidoRetiro),
+      dashboardDiasProximasReservas: Number(form.dashboardDiasProximasReservas),
     };
 
     if (
@@ -61,12 +64,16 @@ export default function ConfiguracionPage() {
       Number.isNaN(payload.diasModista) ||
       Number.isNaN(payload.diasTomarMediciones) ||
       Number.isNaN(payload.cantidadDiasPermitidoRetiro) ||
+      Number.isNaN(payload.dashboardDiasProximasReservas) ||
       payload.diasLavanderia < 0 ||
       payload.diasModista < 0 ||
       payload.diasTomarMediciones < 0 ||
-      payload.cantidadDiasPermitidoRetiro < 0
+      payload.cantidadDiasPermitidoRetiro < 0 ||
+      payload.dashboardDiasProximasReservas < 0
     ) {
-      toast.error("Todos los campos deben ser numeros enteros mayores o iguales a 0");
+      toast.error(
+        "Todos los campos deben ser numeros enteros mayores o iguales a 0",
+      );
       return;
     }
 
@@ -77,15 +84,16 @@ export default function ConfiguracionPage() {
         diasLavanderia: String(updated.diasLavanderia),
         diasModista: String(updated.diasModista),
         diasTomarMediciones: String(updated.diasTomarMediciones),
-        cantidadDiasPermitidoRetiro: String(updated.cantidadDiasPermitidoRetiro),
+        cantidadDiasPermitidoRetiro: String(
+          updated.cantidadDiasPermitidoRetiro,
+        ),
+        dashboardDiasProximasReservas: String(
+          updated.dashboardDiasProximasReservas,
+        ),
       });
       toast.success("Configuracion actualizada");
     } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "No se pudo actualizar la configuracion",
-      );
+      toast.error(getUserFacingErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -134,10 +142,24 @@ export default function ConfiguracionPage() {
           />
           <Input
             type="number"
+            label="Dias para mostrar en dashboard de proximas reservas"
+            value={form.dashboardDiasProximasReservas}
+            onValueChange={(value) =>
+              setForm((prev) => ({
+                ...prev,
+                dashboardDiasProximasReservas: value,
+              }))
+            }
+          />
+          <Input
+            type="number"
             label="Cantidad de dias permitido para retiro"
             value={form.cantidadDiasPermitidoRetiro}
             onValueChange={(value) =>
-              setForm((prev) => ({ ...prev, cantidadDiasPermitidoRetiro: value }))
+              setForm((prev) => ({
+                ...prev,
+                cantidadDiasPermitidoRetiro: value,
+              }))
             }
           />
           <Button color="primary" onPress={handleSave} isLoading={isSaving}>

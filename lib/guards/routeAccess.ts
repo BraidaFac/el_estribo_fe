@@ -10,14 +10,8 @@ export function isPublicRoute(pathname: string): boolean {
 
 /** Roles legados que ya no existen en producto se tratan como USER. */
 export function getRedirectForRole(
-  role: string,
-  pathname: string,
+  _role: string,
+  _pathname: string,
 ): string | null {
-  const normalizedRole = normalizeRole(role);
-
-  if (pathname === "/signup" && normalizedRole !== "ADMIN") {
-    return "/";
-  }
-
   return null;
 }

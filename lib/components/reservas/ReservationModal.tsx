@@ -53,7 +53,6 @@ export function ReservationModal({
     sacoId,
     fechaReserva,
   });
-
   const handleClose = () => {
     reset();
     onOpenChange(false);
@@ -77,7 +76,7 @@ export function ReservationModal({
       onClose={handleClose}
       placement="center"
       backdrop="blur"
-      className="max-h-[90dvh] overflow-auto"
+      className="max-h-[90dvh] max-w-2xl overflow-auto"
     >
       <ModalContent>
         <>

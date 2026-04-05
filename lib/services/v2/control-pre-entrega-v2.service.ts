@@ -24,10 +24,9 @@ export async function crearControlPreEntrega(
 
 export async function resolverRechazoPreEntrega(
   controlId: number,
-  resueltoPor: string,
 ): Promise<unknown> {
   return apiFetch(`/v2/control-pre-entrega/${controlId}/resolver-rechazo`, {
     method: "PATCH",
-    body: JSON.stringify({ resueltoPor }),
+    body: JSON.stringify({}),
   });
 }

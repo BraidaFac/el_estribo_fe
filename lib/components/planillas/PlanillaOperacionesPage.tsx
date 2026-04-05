@@ -1,9 +1,11 @@
 "use client";
 
 import ConfirmModal from "@/lib/components/ConfirmModal";
-import { DevolucionRecepcionModal } from "@/lib/components/reservas/DevolucionRecepcionModal";
+import { AccesoriosRetiroModal } from "@/lib/components/accesorios/AccesoriosRetiroModal";
+import { MedicionesReservaModal } from "@/lib/components/medidas/MedicionesReservaModal";
 import { EnvioLavanderiaReservaModal } from "@/lib/components/planillas/EnvioLavanderiaReservaModal";
 import { EnvioModistaReservaModal } from "@/lib/components/planillas/EnvioModistaReservaModal";
+import { DevolucionRecepcionModal } from "@/lib/components/reservas/DevolucionRecepcionModal";
 import { ApiDateField } from "@/lib/components/ui/ApiDateField";
 import {
   resumenLavanderiasReservaDetalle,
@@ -11,18 +13,23 @@ import {
 } from "@/lib/domain/reservas/asignacionesServicio";
 import {
   getEstadoUbicacionPrendaLabel,
-  getPrioridadTareaOperativaLabel
+  getPrioridadTareaOperativaLabel,
 } from "@/lib/domain/reservas/labels";
 import {
   prendasEnTiendaParaRetiroCliente,
   reservaTieneTareasOperativasAbiertas,
 } from "@/lib/domain/reservas/retiroCliente";
+import type { AccesorioItem } from "@/lib/domain/accesorios/types";
 import { Reserva, TareaOperativa } from "@/lib/domain/reservas/types";
 import { useConfirmDestructive } from "@/lib/hooks/useConfirmDestructive";
 import {
   PLANILLA_OPERACIONES_UI,
   type PlanillaOperacionesMode,
 } from "@/lib/planillas/planillaOperacionesConfig";
+import {
+  listarAccesorios,
+  setExtrasReserva,
+} from "@/lib/services/v2/accesorios-v2.service";
 import {
   listarReservasRango,
   listarTareasOperativas,
@@ -46,7 +53,9 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
+  Tooltip,
 } from "@heroui/react";
+import Link from "next/link";
 import { addMonths, format } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -86,7 +95,9 @@ function defaultDesdeHasta() {
   };
 }
 
-export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) {
+export function PlanillaOperacionesPage({
+  mode,
+}: PlanillaOperacionesPageProps) {
   const ui = PLANILLA_OPERACIONES_UI[mode];
   const { confirmModalRef, confirmDestructive } = useConfirmDestructive();
   const [desde, setDesde] = useState(() => defaultDesdeHasta().desde);
@@ -94,13 +105,30 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
   const [isLoading, setIsLoading] = useState(false);
   const [tareas, setTareas] = useState<TareaOperativa[]>([]);
   const [reservas, setReservas] = useState<Reserva[]>([]);
+
   /** Tareas operativas (filtradas por reservas visibles) para advertencias en retiro de cliente. */
-  const [tareasRetiroContexto, setTareasRetiroContexto] = useState<TareaOperativa[]>([]);
-  const [lavModalReservaId, setLavModalReservaId] = useState<number | null>(null);
+  const [tareasRetiroContexto, setTareasRetiroContexto] = useState<
+    TareaOperativa[]
+  >([]);
+  const [lavModalReservaId, setLavModalReservaId] = useState<number | null>(
+    null,
+  );
   const [lavModalPantalon, setLavModalPantalon] = useState(false);
-  const [modModalReservaId, setModModalReservaId] = useState<number | null>(null);
+  const [modModalReservaId, setModModalReservaId] = useState<number | null>(
+    null,
+  );
   const [modModalPantalon, setModModalPantalon] = useState(false);
-  const [devolucionModalReserva, setDevolucionModalReserva] = useState<Reserva | null>(null);
+  const [medModalReservaId, setMedModalReservaId] = useState<number | null>(
+    null,
+  );
+  const [medModalPantalon, setMedModalPantalon] = useState(false);
+  const [devolucionModalReserva, setDevolucionModalReserva] =
+    useState<Reserva | null>(null);
+  const [retiroAccesoriosReserva, setRetiroAccesoriosReserva] =
+    useState<Reserva | null>(null);
+  const [accesorios, setAccesorios] = useState<AccesorioItem[]>([]);
+  const [loadingAccesorios, setLoadingAccesorios] = useState(false);
+  const [retiroConfirming, setRetiroConfirming] = useState(false);
 
   const canSearch = !!desde && !!hasta;
 
@@ -109,7 +137,9 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
       return tareas.filter(
         (t) =>
           t.tipoTarea === "LLEVAR_LAVANDERIA" &&
-          (mode === "LLEVAR_LAVANDERIA" ? t.estado === "PENDIENTE" : t.estado === "EN_PROCESO"),
+          (mode === "LLEVAR_LAVANDERIA"
+            ? t.estado === "PENDIENTE"
+            : t.estado === "EN_PROCESO"),
       );
     }
     if (mode === "LLEVAR_MODISTA") {
@@ -131,17 +161,25 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
   );
 
   const visibleReservas = useMemo(() => {
-    if (mode !== "DEVOLUCIONES_CLIENTES" && mode !== "RETIROS_CLIENTES") return [];
+    if (mode !== "DEVOLUCIONES_CLIENTES" && mode !== "RETIROS_CLIENTES")
+      return [];
     return reservas.filter((r) =>
       mode === "DEVOLUCIONES_CLIENTES"
         ? r.estadoReserva === "EN_CURSO"
-        : r.estadoReserva === "LISTO_PARA_ENTREGAR",
+        : r.estadoReserva === "LISTO_PARA_ENTREGAR" ||
+          r.estadoReserva === "CONFIRMADA",
     );
   }, [mode, reservas]);
 
   const handleSearch = async () => {
     if (!canSearch) {
       toast.error("Selecciona desde y hasta para continuar");
+      return;
+    }
+    if (hasta < desde) {
+      toast.error(
+        "La fecha de hasta no puede ser anterior a la fecha de desde",
+      );
       return;
     }
     try {
@@ -196,6 +234,12 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
     setModModalReservaId(grupo.reservaId);
   };
 
+  const abrirModalMediciones = (grupo: GrupoTareasReserva) => {
+    const tienePantalon = grupo.tareas.some((t) => t.tipoPrenda === "PANTALON");
+    setMedModalPantalon(tienePantalon);
+    setMedModalReservaId(grupo.reservaId);
+  };
+
   const handleRecibirGrupoLavanderia = async (reservaId: number) => {
     try {
       await registrarRecibirLavanderiaPorReserva(reservaId);
@@ -226,6 +270,22 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
     }
   };
 
+  const handleConfirmarRetiroConExtras = async (
+    extras: { accesorioId: number; observacion: string | null }[],
+  ) => {
+    if (!retiroAccesoriosReserva) return;
+    try {
+      setRetiroConfirming(true);
+      await setExtrasReserva(retiroAccesoriosReserva.id, { extras });
+      await ejecutarRetiroCliente(retiroAccesoriosReserva);
+      setRetiroAccesoriosReserva(null);
+    } catch (error) {
+      toast.error(getUserFacingErrorMessage(error));
+    } finally {
+      setRetiroConfirming(false);
+    }
+  };
+
   const ejecutarRetiroCliente = async (reserva: Reserva) => {
     await marcarReservaRetirada(
       reserva.id,
@@ -243,7 +303,34 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
       tareasRetiroContexto,
       reserva.id,
     );
+
     if (conAdvertencia) {
+      toast.warning(
+        "Esta reserva todavía tiene tareas pendientes. Finalize las tareas pendientes para continuar.",
+      );
+      return;
+    }
+    if (reserva.estadoReserva !== "LISTO_PARA_ENTREGAR") {
+      toast.warning(
+        "Esta reserva no está lista para entregar. Prepare la entrega para continuar.",
+      );
+      return;
+    }
+    /*   if (conAdvertencia && reserva.estadoReserva === "CONFIRMADA") {
+      void confirmDestructive({
+        title: "Tareas pendientes",
+        message:
+          "Esta reserva todavía tiene tareas pendientes. ¿Desea preparar la entrega y retirar igual el traje?",
+        confirmText: "Preparar entrega y retirar",
+        variant: "warning",
+        action: async () => {
+          setModalPrepararEntregaOperativas(true);
+        },
+      });
+
+      return;
+    }
+    if (conAdvertencia && reserva.estadoReserva === "LISTO_PARA_ENTREGAR") {
       void confirmDestructive({
         title: "Tareas pendientes",
         message:
@@ -252,7 +339,7 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
         variant: "warning",
         action: async () => {
           try {
-            await ejecutarRetiroCliente(reserva);
+            await ejecutarRetiroCliente();
           } catch (error) {
             toast.error(getUserFacingErrorMessage(error));
             throw error;
@@ -261,23 +348,46 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
       });
       return;
     }
-    void (async () => {
-      try {
-        await ejecutarRetiroCliente(reserva);
-      } catch (error) {
-        toast.error(getUserFacingErrorMessage(error));
-      }
-    })();
+    if (reserva.estadoReserva !== "LISTO_PARA_ENTREGAR") {
+      void confirmDestructive({
+        title: "Reserva no lista para entregar",
+        message:
+          "¿Desea preparar la entrega y retirar igual el traje?",
+        confirmText: "Preparar entrega y retirar",
+        variant: "warning",
+        action: async () => {
+          setModalPrepararEntregaOperativas(true);
+        },
+      });
+      return;
+    } */
+
+    // Abrir modal de accesorios antes de ejecutar el retiro
+    setRetiroAccesoriosReserva(reserva);
+    if (accesorios.length === 0) {
+      setLoadingAccesorios(true);
+      listarAccesorios()
+        .then((data) => setAccesorios(data))
+        .catch(() => setAccesorios([]))
+        .finally(() => setLoadingAccesorios(false));
+    }
   };
 
   const renderCeldaPrendas = (grupo: GrupoTareasReserva) => (
     <ul className="list-inside list-none text-sm flex flex-col gap-1">
       {grupo.tareas.map((row) => (
-        <li key={row.id} className="flex flex-row gap-1 justify-between min-w-max">
+        <li
+          key={row.id}
+          className="flex flex-row gap-1 justify-between min-w-max"
+        >
           {row.tipoPrenda === "SACO"
             ? `Saco ${row.saco?.codigo ?? "-"}`
             : `Pantalón ${row.pantalon?.codigo ?? "-"}`}{" "}
-          <Chip color={`${row.prioridad === "ALTA" ? "danger" : row.prioridad === "MEDIA" ? "warning" : "secondary"}`} size="sm" className="text-pastel-text">
+          <Chip
+            color={`${row.prioridad === "ALTA" ? "danger" : row.prioridad === "MEDIA" ? "warning" : "secondary"}`}
+            size="sm"
+            className="text-pastel-text"
+          >
             {getPrioridadTareaOperativaLabel(row.prioridad)}
           </Chip>
         </li>
@@ -288,6 +398,15 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
   return (
     <div className="space-y-4 p-4 md:p-6">
       <ConfirmModal ref={confirmModalRef} />
+
+      <AccesoriosRetiroModal
+        isOpen={retiroAccesoriosReserva !== null}
+        accesorios={accesorios}
+        loadingAccesorios={loadingAccesorios}
+        confirming={retiroConfirming}
+        onConfirm={(extras) => void handleConfirmarRetiroConExtras(extras)}
+        onCancel={() => setRetiroAccesoriosReserva(null)}
+      />
 
       <div className="rounded-lg border border-pastel-border bg-pastel-surface p-4">
         <h1 className="text-2xl font-semibold text-pastel-text">{ui.title}</h1>
@@ -306,6 +425,26 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
         </div>
       </div>
 
+      {/*    <ControlPreEntregaModal
+        isOpen={modalPrepararEntregaOperativas}
+        onOpenChange={(open) => {
+          if (!open) setModalPrepararEntregaOperativas(false);
+        }}
+        reservaId={reservaToPick?.id ?? null}
+        numeroReservaLabel={reservaToPick?.id ? `#${reservaToPick.id}` : ""}
+        clienteNombre={reservaToPick?.clienteNombre ?? ""}
+        onGuardado={() => ejecutarRetiroCliente()}
+      /> */}
+
+      <MedicionesReservaModal
+        isOpen={medModalReservaId != null}
+        onOpenChange={(open) => {
+          if (!open) setMedModalReservaId(null);
+        }}
+        reservaId={medModalReservaId}
+        tienePantalon={medModalPantalon}
+        onGuardado={() => void handleSearch()}
+      />
       <EnvioLavanderiaReservaModal
         isOpen={lavModalReservaId != null}
         onOpenChange={(open) => {
@@ -355,14 +494,20 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
               </TableColumn>,
               ...(mode === "RETIRAR_LAVANDERIA"
                 ? [
-                    <TableColumn key="lav" className={ `min-w-[15rem] ${TABLE_HEADER_CLASS}`}>
+                    <TableColumn
+                      key="lav"
+                      className={`min-w-[15rem] ${TABLE_HEADER_CLASS}`}
+                    >
                       Lavandería
                     </TableColumn>,
                   ]
                 : []),
               ...(mode === "RETIRAR_MODISTA"
                 ? [
-                    <TableColumn key="mod" className={ `min-w-[15rem] ${TABLE_HEADER_CLASS}`}>
+                    <TableColumn
+                      key="mod"
+                      className={`min-w-[15rem] ${TABLE_HEADER_CLASS}`}
+                    >
                       Modista
                     </TableColumn>,
                   ]
@@ -391,7 +536,11 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
                         >
                           {resumenLavanderiasReservaDetalle(
                             grupo.tareas[0]?.reserva,
-                          ).map((l) => <p className="font-bold" key={l}>{l}</p>)}
+                          ).map((l) => (
+                            <p className="font-bold" key={l}>
+                              {l}
+                            </p>
+                          ))}
                         </TableCell>,
                       ]
                     : []),
@@ -403,58 +552,78 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
                         >
                           {resumenModistasReservaDetalle(
                             grupo.tareas[0]?.reserva,
-                          ).map((l) => <p key={l}>{l}</p>)}
+                          ).map((l) => (
+                            <p key={l}>{l}</p>
+                          ))}
                         </TableCell>,
                       ]
                     : []),
                   <TableCell key="p">{renderCeldaPrendas(grupo)}</TableCell>,
                   <TableCell key="a">
-                  {mode === "LLEVAR_LAVANDERIA" ? (
-                    <Button
-                      size="sm"
-                      color="primary"
-                      onPress={() => abrirModalLavanderia(grupo)}
-                    >
-                      Registrar envío a lavandería
-                    </Button>
-                  ) : mode === "RETIRAR_LAVANDERIA" ? (
-                    <Button
-                      size="sm"
-                      color="secondary"
-                      onPress={() => void handleRecibirGrupoLavanderia(grupo.reservaId)}
-                    >
-                      Recibir de lavandería ({grupo.tareas.length}{" "}
-                      {grupo.tareas.length === 1 ? "prenda" : "prendas"})
-                    </Button>
-                  ) : mode === "LLEVAR_MODISTA" ? (
-                    <Button
-                      size="sm"
-                      color="primary"
-                      onPress={() => abrirModalModista(grupo)}
-                    >
-                      Registrar envío a modista
-                    </Button>
-                  ) : (
-                    <div className="flex flex-row gap-1">
+                    {mode === "LLEVAR_LAVANDERIA" ? (
+                      <Button
+                        size="sm"
+                        color="primary"
+                        onPress={() => abrirModalLavanderia(grupo)}
+                      >
+                        Registrar envío a lavandería
+                      </Button>
+                    ) : mode === "RETIRAR_LAVANDERIA" ? (
                       <Button
                         size="sm"
                         color="secondary"
-                        onPress={() => void handleRecibirGrupoModista(grupo.reservaId)}
+                        onPress={() =>
+                          void handleRecibirGrupoLavanderia(grupo.reservaId)
+                        }
                       >
-                        Recibir todo ({grupo.tareas.length})
+                        Recibir de lavandería ({grupo.tareas.length}{" "}
+                        {grupo.tareas.length === 1 ? "prenda" : "prendas"})
                       </Button>
-                      {grupo.tareas.map((t) => (
+                    ) : mode === "LLEVAR_MODISTA" ? (
+                      <div className="flex flex-row gap-1">
                         <Button
-                          key={t.id}
                           size="sm"
                           variant="flat"
-                          onPress={() => void handleRecibirModistaTarea(t)}
+                          onPress={() => abrirModalMediciones(grupo)}
                         >
-                          Solo {t.saco ? `Saco "${t.saco.codigo}"` :  t.pantalon ? `Pantalón "${t.pantalon?.codigo}"` : ''}
+                          Ver Mediciones
                         </Button>
-                      ))}
-                    </div>
-                  )}
+                        <Button
+                          size="sm"
+                          color="primary"
+                          onPress={() => abrirModalModista(grupo)}
+                        >
+                          Registrar envío a modista
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-row gap-1">
+                        <Button
+                          size="sm"
+                          color="secondary"
+                          onPress={() =>
+                            void handleRecibirGrupoModista(grupo.reservaId)
+                          }
+                        >
+                          Recibir todo ({grupo.tareas.length})
+                        </Button>
+                        {grupo.tareas.map((t) => (
+                          <Button
+                            key={t.id}
+                            size="sm"
+                            variant="flat"
+                            onPress={() => void handleRecibirModistaTarea(t)}
+                          >
+                            Solo{" "}
+                            {t.saco
+                              ? `Saco "${t.saco.codigo}"`
+                              : t.pantalon
+                                ? `Pantalón "${t.pantalon?.codigo}"`
+                                : ""}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
                   </TableCell>,
                 ]}
               </TableRow>
@@ -469,7 +638,9 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
             <TableColumn className={TABLE_HEADER_CLASS}>Saco</TableColumn>
             <TableColumn className={TABLE_HEADER_CLASS}>Pantalón</TableColumn>
             <TableColumn className={TABLE_HEADER_CLASS}>Cliente</TableColumn>
-            <TableColumn className={TABLE_HEADER_CLASS}>Ubicación actual</TableColumn>
+            <TableColumn className={TABLE_HEADER_CLASS}>
+              Ubicación actual
+            </TableColumn>
             <TableColumn className={TABLE_HEADER_CLASS}>Acción</TableColumn>
           </TableHeader>
           <TableBody
@@ -481,7 +652,9 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
                 <TableCell>{formatApiDateForUi(row.fechaReserva)}</TableCell>
                 <TableCell>{`${row.saco.codigo} (${row.saco.marca})`}</TableCell>
                 <TableCell>
-                  {row.pantalon ? `${row.pantalon.codigo} (${row.pantalon.marca})` : "-"}
+                  {row.pantalon
+                    ? `${row.pantalon.codigo} (${row.pantalon.marca})`
+                    : "-"}
                 </TableCell>
                 <TableCell>{row.clienteNombre}</TableCell>
                 <TableCell>
@@ -491,18 +664,61 @@ export function PlanillaOperacionesPage({ mode }: PlanillaOperacionesPageProps) 
                 </TableCell>
                 <TableCell>
                   {mode === "RETIROS_CLIENTES" ? (
-                    <Button
-                      size="sm"
-                      color={
-                        reservaTieneTareasOperativasAbiertas(tareasRetiroContexto, row.id)
-                          ? "warning"
-                          : "primary"
-                      }
-                      isDisabled={!prendasEnTiendaParaRetiroCliente(row)}
-                      onPress={() => void solicitarRetiroCliente(row)}
-                    >
-                      Registrar retiro en el local
-                    </Button>
+                    <div className="flex flex-row items-center gap-1">
+                      <Tooltip
+                        content="Preparar entrega antes de retirar"
+                        isDisabled={
+                          prendasEnTiendaParaRetiroCliente(row) &&
+                          row.estadoReserva === "LISTO_PARA_ENTREGAR"
+                        }
+                      >
+                        <span>
+                          <Button
+                            size="sm"
+                            color={
+                              row.estadoReserva !== "LISTO_PARA_ENTREGAR"
+                                ? "warning"
+                                : "primary"
+                            }
+                            isDisabled={
+                              !prendasEnTiendaParaRetiroCliente(row) ||
+                              row.estadoReserva !== "LISTO_PARA_ENTREGAR"
+                            }
+                            onPress={() => void solicitarRetiroCliente(row)}
+                          >
+                            Registrar Retiro
+                          </Button>
+                        </span>
+                      </Tooltip>
+                      {row.estadoReserva !== "LISTO_PARA_ENTREGAR" && (
+                        <Tooltip content="Ir a preparar entrega">
+                          <Button
+                            as={Link}
+                            href="/planillas/local/preparar-entrega"
+                            size="sm"
+                            isIconOnly
+                            variant="flat"
+                            aria-label="Ir a preparar entrega"
+                          >
+                            <svg
+                              aria-hidden="true"
+                              fill="none"
+                              height="1em"
+                              viewBox="0 0 24 24"
+                              width="1em"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                              <rect x="9" y="3" width="6" height="4" rx="1" />
+                              <path d="m9 12 2 2 4-4" />
+                            </svg>
+                          </Button>
+                        </Tooltip>
+                      )}
+                    </div>
                   ) : (
                     <Button
                       size="sm"

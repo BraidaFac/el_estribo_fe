@@ -14,7 +14,6 @@ import { TABLE_HEADER_CLASS } from "@/lib/utils/uiStyles";
 import { useConfirmDestructive } from "@/lib/hooks/useConfirmDestructive";
 import {
   Button,
-  Input,
   Modal,
   ModalBody,
   ModalContent,
@@ -37,7 +36,6 @@ export function PlanillaRechazadosPreEntregaPage() {
   const [filas, setFilas] = useState<RechazoPreEntregaFila[]>([]);
   const [resolverOpen, setResolverOpen] = useState(false);
   const [resolverControlId, setResolverControlId] = useState<number | null>(null);
-  const [resolverNombre, setResolverNombre] = useState("");
   const [resolverSaving, setResolverSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -58,18 +56,14 @@ export function PlanillaRechazadosPreEntregaPage() {
 
   const abrirResolver = (fila: RechazoPreEntregaFila) => {
     setResolverControlId(fila.id);
-    setResolverNombre("");
     setResolverOpen(true);
   };
 
   const ejecutarResolver = async () => {
-    if (resolverControlId == null || !resolverNombre.trim()) {
-      toast.error("Indique quién resuelve");
-      return;
-    }
+    if (resolverControlId == null) return;
     try {
       setResolverSaving(true);
-      await resolverRechazoPreEntrega(resolverControlId, resolverNombre.trim());
+      await resolverRechazoPreEntrega(resolverControlId);
       toast.success("Marcado como listo para entregar");
       setResolverOpen(false);
       await load();
@@ -108,12 +102,6 @@ export function PlanillaRechazadosPreEntregaPage() {
                   El problema fue corregido manualmente. Se registrará la resolución en el mismo
                   control y la reserva quedará lista para entregar.
                 </p>
-                <Input
-                  label="Resuelto por"
-                  value={resolverNombre}
-                  onValueChange={setResolverNombre}
-                  placeholder="Nombre de quien confirma"
-                />
               </ModalBody>
               <ModalFooter>
                 <Button variant="flat" onPress={onClose}>
@@ -172,7 +160,7 @@ export function PlanillaRechazadosPreEntregaPage() {
                 <TableCell className="max-w-[14rem] whitespace-normal text-sm">
                   {fila.motivoRechazo ?? "—"}
                 </TableCell>
-                <TableCell>{fila.auditorNombre}</TableCell>
+                <TableCell>{fila.creadoPorNombre ?? "—"}</TableCell>
                 <TableCell>{getEstadoControlPreEntregaLabel(fila.estado)}</TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-2">

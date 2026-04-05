@@ -3,6 +3,7 @@
 import ConfirmModal from "@/lib/components/ConfirmModal";
 import { Pantalon, Saco } from "@/lib/domain/reservas/types";
 import { useConfirmDestructive } from "@/lib/hooks/useConfirmDestructive";
+import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
 import { formatApiDateTimeForUi } from "@/lib/utils/formatApiDate";
 import { ACTION_BUTTON_BASE_CLASS, ACTION_BUTTON_CLASSES, TABLE_HEADER_CLASS } from "@/lib/utils/uiStyles";
 import {
@@ -88,7 +89,7 @@ export function PrendaCrudPage<T extends Prenda>({
       setIsLoading(true);
       setRows(await listFn());
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : `No se pudo cargar ${title}`);
+      toast.error(getUserFacingErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -210,7 +211,7 @@ export function PrendaCrudPage<T extends Prenda>({
       onOpenChange();
       resetForm();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "No se pudo guardar");
+      toast.error(getUserFacingErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -228,7 +229,7 @@ export function PrendaCrudPage<T extends Prenda>({
           toast.success("Registro desactivado");
           await refresh();
         } catch (error) {
-          toast.error(error instanceof Error ? error.message : "No se pudo eliminar");
+          toast.error(getUserFacingErrorMessage(error));
           throw error;
         }
       },

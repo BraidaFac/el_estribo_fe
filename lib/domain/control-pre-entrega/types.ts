@@ -17,7 +17,7 @@ export type RechazoPreEntregaFila = {
   fechaReserva: string;
   clienteNombre: string;
   motivoRechazo: string | null;
-  auditorNombre: string;
+  creadoPorNombre: string | null;
   estado: EstadoControlPreEntrega;
   createdAt: string;
 };
@@ -36,7 +36,6 @@ export type CreateControlPreEntregaPayload = {
   complementosObs?: string;
   estado: "APROBADO" | "RECHAZADO";
   motivoRechazo?: string;
-  auditorNombre: string;
 };
 
 /** Registro persistido (lectura desde detalle operativo). */
@@ -54,8 +53,8 @@ export type ControlPreEntregaRecord = {
   complementosObs: string | null;
   estado: EstadoControlPreEntrega;
   motivoRechazo: string | null;
-  auditorNombre: string;
+  creadoPor: { id: string; name: string } | null;
   createdAt: string;
   fechaResolucion: string | null;
-  resueltoPor: string | null;
+  resueltoPor: { id: string; name: string } | null;
 };

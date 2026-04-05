@@ -41,7 +41,7 @@ const CATEGORIA_LABEL: Record<DashboardCategoria, string> = {
 const URGENCIA_LABEL: Record<DashboardUrgencia, string> = {
   VENCIDA: "Tareas atrasadas",
   HOY: "Para hoy",
-  PROXIMA: "Tareas Próximos 7 días",
+  PROXIMA: "Tareas Próximos días",
   FUTURA: "Tareas Más adelante",
   SIN_FECHA: "Sin fecha objetivo",
 };
@@ -158,7 +158,7 @@ export function DashboardOperativoPage() {
 
             {data.resumen.proximas > 0 && (
               <Chip color="primary" size="sm" variant="flat">
-                {data.resumen.proximas} próx. 7 días
+                {data.resumen.proximas} proximas
               </Chip>
             )}
             {data.resumen.futuras > 0 && (
@@ -199,9 +199,7 @@ export function DashboardOperativoPage() {
         </div>
       ) : data ? (
         <div className="space-y-8">
-          <ProximasReservasSection
-            reservas={data.proximasReservas7Dias ?? []}
-          />
+          <ProximasReservasSection reservas={data.proximasReservas ?? []} />
           {!data.items.length ? (
             <div className="rounded-lg border border-dashed border-pastel-border bg-pastel-surface/60 p-8 text-center text-pastel-text/80">
               <p className="font-medium text-pastel-text">
@@ -252,7 +250,7 @@ function ProximasReservasSection({
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold text-pastel-text">
-            Próximas reservas (7 días)
+            Próximas reservas
           </h2>
         </div>
         <Button
@@ -269,7 +267,7 @@ function ProximasReservasSection({
           No hay reservas en este rango.
         </p>
       ) : (
-        <Table aria-label="Próximas reservas en los próximos siete días">
+        <Table aria-label="Próximas reservas en los próximos días">
           <TableHeader>
             <TableColumn className={TABLE_HEADER_CLASS}>Reserva #</TableColumn>
             <TableColumn className={TABLE_HEADER_CLASS}>

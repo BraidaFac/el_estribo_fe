@@ -62,6 +62,5 @@ export type DashboardOperativoResponse = {
   };
   porCategoria: Record<string, number>;
   items: DashboardItem[];
-  /** Reservas con fecha en los próximos 7 días (hoy inclusive + 6). */
-  proximasReservas7Dias: ReservaConAccionesView[];
+  proximasReservas: ReservaConAccionesView[];
 };

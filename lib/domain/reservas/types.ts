@@ -4,7 +4,6 @@ export type TipoPrenda = "SACO" | "PANTALON";
 export type CondicionPrenda = "LIMPIA" | "SUCIA" | "REQUIERE_REVISION";
 
 export type EstadoReserva =
-  | "PENDIENTE"
   | "CONFIRMADA"
   | "LISTO_PARA_ENTREGAR"
   | "EN_CURSO"
@@ -245,6 +244,7 @@ export interface MedicionesReservaResponse {
   reservaId: number;
   mediciones: MedicionesReservaJson;
   actualizadoEn: string | null;
+  creadoPor: { id: string; name: string } | null;
 }
 
 export interface CancelarBloqueoPayload {
@@ -258,4 +258,5 @@ export interface ConfiguracionGeneral {
   diasModista: number;
   diasTomarMediciones: number;
   cantidadDiasPermitidoRetiro: number;
+  dashboardDiasProximasReservas: number;
 }

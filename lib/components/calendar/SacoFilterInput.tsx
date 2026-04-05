@@ -2,10 +2,10 @@
 
 import { Saco } from "@/lib/domain/reservas/types";
 import { listarSacos } from "@/lib/services/v2";
+import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
 import { Button, Input, Spinner } from "@heroui/react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-
 type SacoFilterInputProps = {
   value: number | null;
   onSelect: (sacoId: number | null) => void;
@@ -33,11 +33,7 @@ export function SacoFilterInput({
         setIsLoading(true);
         setCatalogo(await listarSacos());
       } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "No se pudo cargar el catalogo de sacos",
-        );
+        toast.error(getUserFacingErrorMessage(error));
       } finally {
         setIsLoading(false);
       }
@@ -111,7 +107,9 @@ export function SacoFilterInput({
                 setQuery(buildSacoLabel(saco));
               }}
               className={`block w-full rounded px-3 py-2 text-left text-sm hover:bg-white/70 ${
-                value === saco.id ? "bg-white/80 font-medium text-pastel-primary" : "text-pastel-text"
+                value === saco.id
+                  ? "bg-white/80 font-medium text-pastel-primary"
+                  : "text-pastel-text"
               }`}
             >
               {buildSacoLabel(saco)}

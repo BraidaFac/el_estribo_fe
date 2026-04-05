@@ -2,6 +2,7 @@
 
 import ConfirmModal from "@/lib/components/ConfirmModal";
 import { useConfirmDestructive } from "@/lib/hooks/useConfirmDestructive";
+import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
 import { ACTION_BUTTON_BASE_CLASS, ACTION_BUTTON_CLASSES, TABLE_HEADER_CLASS } from "@/lib/utils/uiStyles";
 import {
   Button,
@@ -106,9 +107,7 @@ export function ContactoCrudPage<T extends ContactoBase>({
       const data = await listFn();
       setRows(data);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : `No se pudo cargar ${entityLabel}`,
-      );
+      toast.error(getUserFacingErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -157,9 +156,7 @@ export function ContactoCrudPage<T extends ContactoBase>({
       onOpenChange();
       resetForm();
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : `No se pudo guardar ${entityLabelCapitalized}`,
-      );
+      toast.error(getUserFacingErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -179,9 +176,7 @@ export function ContactoCrudPage<T extends ContactoBase>({
           toast.success(`${entityLabelCapitalized} eliminada`);
           await refresh();
         } catch (error) {
-          toast.error(
-            error instanceof Error ? error.message : `No se pudo eliminar ${entityLabel}`,
-          );
+          toast.error(getUserFacingErrorMessage(error));
           throw error;
         }
       },
@@ -194,11 +189,7 @@ export function ContactoCrudPage<T extends ContactoBase>({
       toast.success(`${entityLabelCapitalized} marcada como predeterminada`);
       await refresh();
     } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : `No se pudo actualizar ${entityLabel}`,
-      );
+      toast.error(getUserFacingErrorMessage(error));
     }
   };
 

@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReservaExtraItem } from "@/lib/domain/accesorios/types";
+import { getAccesorioIcon } from "@/lib/domain/accesorios/iconosAccesorios";
 import {
   defaultRecepcionDevolucionPayload,
   type BotonesCierresInspeccion,
@@ -9,11 +11,16 @@ import {
   type RecepcionDevolucionPayload,
   type RuedosTelasInspeccion,
 } from "@/lib/domain/reservas/recepcionDevolucion";
+import {
+  obtenerExtrasReserva,
+  patchDevolucionExtras,
+} from "@/lib/services/v2/accesorios-v2.service";
 import { marcarReservaDevuelta } from "@/lib/services/v2/reservas-v2.service";
 import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
 import { validateRecepcionDevolucionPayload } from "@/lib/utils/validateRecepcionDevolucion";
 import {
   Button,
+  Checkbox,
   Input,
   Modal,
   ModalBody,
@@ -45,7 +52,6 @@ type FormState = {
   demoraDiasStr: string;
   estadoGeneral: EstadoGeneralDevolucion;
   decisionLavado: DecisionLavadoPostDevolucion;
-  responsableLimpiezaLocal: string;
 };
 
 function emptyForm(): FormState {
@@ -60,7 +66,6 @@ function emptyForm(): FormState {
     demoraDiasStr: "",
     estadoGeneral: d.estadoGeneral,
     decisionLavado: d.decisionLavado,
-    responsableLimpiezaLocal: "",
   };
 }
 
@@ -93,9 +98,6 @@ function buildPayload(form: FormState): RecepcionDevolucionPayload {
   if (rtc !== undefined) p.ruedosTelasCobro = rtc;
   if (dgc !== undefined) p.danoGraveCobro = dgc;
   if (demoraDias !== undefined) p.demoraDias = demoraDias;
-  if (p.decisionLavado === "LIMPIEZA_LOCAL") {
-    p.responsableLimpiezaLocal = form.responsableLimpiezaLocal.trim() || null;
-  }
   return p;
 }
 
@@ -108,14 +110,37 @@ export function DevolucionRecepcionModal({
 }: DevolucionRecepcionModalProps) {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<FormState>(() => emptyForm());
+  const [extras, setExtras] = useState<ReservaExtraItem[]>([]);
+  const [extrasDevolucion, setExtrasDevolucion] = useState<
+    Map<number, { devuelto: boolean; observacionDevolucion: string }>
+  >(new Map());
 
   const reset = useCallback(() => {
     setForm(emptyForm());
+    setExtras([]);
+    setExtrasDevolucion(new Map());
   }, []);
 
   useEffect(() => {
-    if (!isOpen) reset();
-  }, [isOpen, reset]);
+    if (!isOpen) {
+      reset();
+      return;
+    }
+    if (reservaId == null) return;
+    obtenerExtrasReserva(reservaId)
+      .then((data) => {
+        setExtras(data);
+        const map = new Map<number, { devuelto: boolean; observacionDevolucion: string }>();
+        for (const e of data) {
+          map.set(e.id, {
+            devuelto: e.devuelto ?? false,
+            observacionDevolucion: e.observacionDevolucion ?? "",
+          });
+        }
+        setExtrasDevolucion(map);
+      })
+      .catch(() => {/* extras load fails silently */});
+  }, [isOpen, reservaId, reset]);
 
   const fechaDevolucionLabel = format(new Date(), "dd/MM/yyyy");
 
@@ -129,6 +154,17 @@ export function DevolucionRecepcionModal({
     }
     setSaving(true);
     try {
+      if (extras.length > 0) {
+        const extrasPayload = extras.map((e) => {
+          const state = extrasDevolucion.get(e.id);
+          return {
+            extraId: e.id,
+            devuelto: state?.devuelto ?? false,
+            observacionDevolucion: state?.observacionDevolucion?.trim() || null,
+          };
+        });
+        await patchDevolucionExtras(reservaId, { extras: extrasPayload });
+      }
       await marcarReservaDevuelta(reservaId, { recepcion });
       toast.success(`Reserva ${numeroReservaLabel} registrada como devuelta`);
       onOpenChange(false);
@@ -171,7 +207,9 @@ export function DevolucionRecepcionModal({
             </h3>
             <div className="space-y-3">
               <div>
-                <p className="mb-1 text-xs font-medium text-pastel-text/80">Botones / cierres</p>
+                <p className="mb-1 text-xs font-medium text-pastel-text/80">
+                  Botones / cierres
+                </p>
                 <RadioGroup
                   orientation="horizontal"
                   value={form.botonesCierresEstado}
@@ -179,7 +217,8 @@ export function DevolucionRecepcionModal({
                     setForm((f) => ({
                       ...f,
                       botonesCierresEstado: v as BotonesCierresInspeccion,
-                      botonesCierresCobroStr: v === "OK" ? "" : f.botonesCierresCobroStr,
+                      botonesCierresCobroStr:
+                        v === "OK" ? "" : f.botonesCierresCobroStr,
                     }))
                   }
                 >
@@ -204,7 +243,9 @@ export function DevolucionRecepcionModal({
                 />
               </div>
               <div>
-                <p className="mb-1 text-xs font-medium text-pastel-text/80">Ruedos / telas</p>
+                <p className="mb-1 text-xs font-medium text-pastel-text/80">
+                  Ruedos / telas
+                </p>
                 <RadioGroup
                   orientation="horizontal"
                   classNames={{ wrapper: "flex-wrap gap-x-4" }}
@@ -213,7 +254,8 @@ export function DevolucionRecepcionModal({
                     setForm((f) => ({
                       ...f,
                       ruedosTelasEstado: v as RuedosTelasInspeccion,
-                      ruedosTelasCobroStr: v === "OK" ? "" : f.ruedosTelasCobroStr,
+                      ruedosTelasCobroStr:
+                        v === "OK" ? "" : f.ruedosTelasCobroStr,
                     }))
                   }
                 >
@@ -239,7 +281,9 @@ export function DevolucionRecepcionModal({
                 />
               </div>
               <div>
-                <p className="mb-1 text-xs font-medium text-pastel-text/80">Daño grave</p>
+                <p className="mb-1 text-xs font-medium text-pastel-text/80">
+                  Daño grave
+                </p>
                 <RadioGroup
                   orientation="horizontal"
                   classNames={{ wrapper: "flex-wrap gap-x-4" }}
@@ -278,7 +322,9 @@ export function DevolucionRecepcionModal({
                 type="text"
                 inputMode="numeric"
                 value={form.demoraDiasStr}
-                onValueChange={(v) => setForm((f) => ({ ...f, demoraDiasStr: v }))}
+                onValueChange={(v) =>
+                  setForm((f) => ({ ...f, demoraDiasStr: v }))
+                }
                 description="Opcional. Dejar vacío si no hubo demora."
               />
             </div>
@@ -290,7 +336,9 @@ export function DevolucionRecepcionModal({
             </h3>
             <div className="space-y-3">
               <div>
-                <p className="mb-1 text-xs font-medium text-pastel-text/80">Estado general</p>
+                <p className="mb-1 text-xs font-medium text-pastel-text/80">
+                  Estado general
+                </p>
                 <RadioGroup
                   value={form.estadoGeneral}
                   onValueChange={(v) =>
@@ -305,15 +353,15 @@ export function DevolucionRecepcionModal({
                 </RadioGroup>
               </div>
               <div>
-                <p className="mb-1 text-xs font-medium text-pastel-text/80">Decisión</p>
+                <p className="mb-1 text-xs font-medium text-pastel-text/80">
+                  Decisión
+                </p>
                 <RadioGroup
                   value={form.decisionLavado}
                   onValueChange={(v) =>
                     setForm((f) => ({
                       ...f,
                       decisionLavado: v as DecisionLavadoPostDevolucion,
-                      responsableLimpiezaLocal:
-                        v === "LIMPIEZA_LOCAL" ? f.responsableLimpiezaLocal : "",
                     }))
                   }
                 >
@@ -321,23 +369,78 @@ export function DevolucionRecepcionModal({
                   <Radio value="LIMPIEZA_LOCAL">Limpieza local</Radio>
                 </RadioGroup>
               </div>
-              <Input
-                label="Responsable limpieza local"
-                value={form.responsableLimpiezaLocal}
-                onValueChange={(v) =>
-                  setForm((f) => ({ ...f, responsableLimpiezaLocal: v }))
-                }
-                isDisabled={form.decisionLavado !== "LIMPIEZA_LOCAL"}
-                description="Obligatorio si la decisión es limpieza local"
-              />
             </div>
           </section>
+
+          {extras.length > 0 && (
+            <section className="rounded-xl border border-pastel-border bg-pastel-soft/80 p-3">
+              <h3 className="mb-2 text-sm font-semibold text-pastel-text">
+                C. Accesorios
+              </h3>
+              <div className="space-y-3">
+                {extras.map((e) => {
+                  const Icon = getAccesorioIcon(e.accesorio.icono);
+                  const state = extrasDevolucion.get(e.id);
+                  return (
+                    <div key={e.id} className="space-y-1.5">
+                      <div className="flex items-center gap-3">
+                        <Icon className="h-5 w-5 text-pastel-text/70 shrink-0" aria-hidden />
+                        <span className="flex-1 text-sm font-medium text-pastel-text">
+                          {e.accesorio.nombre}
+                          {e.observacion && (
+                            <span className="ml-1 text-pastel-text/60">
+                              — {e.observacion}
+                            </span>
+                          )}
+                        </span>
+                        <Checkbox
+                          isSelected={state?.devuelto ?? false}
+                          onValueChange={(checked) =>
+                            setExtrasDevolucion((prev) => {
+                              const next = new Map(prev);
+                              next.set(e.id, {
+                                devuelto: checked,
+                                observacionDevolucion:
+                                  next.get(e.id)?.observacionDevolucion ?? "",
+                              });
+                              return next;
+                            })
+                          }
+                        >
+                          Devuelto
+                        </Checkbox>
+                      </div>
+                      <Input
+                        size="sm"
+                        label="Observación devolución (opcional)"
+                        value={state?.observacionDevolucion ?? ""}
+                        onValueChange={(v) =>
+                          setExtrasDevolucion((prev) => {
+                            const next = new Map(prev);
+                            next.set(e.id, {
+                              devuelto: next.get(e.id)?.devuelto ?? false,
+                              observacionDevolucion: v,
+                            });
+                            return next;
+                          })
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </ModalBody>
         <ModalFooter className="border-t border-pastel-border/70">
           <Button variant="flat" onPress={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button color="secondary" isLoading={saving} onPress={() => void handleSubmit()}>
+          <Button
+            color="secondary"
+            isLoading={saving}
+            onPress={() => void handleSubmit()}
+          >
             Confirmar devolución
           </Button>
         </ModalFooter>

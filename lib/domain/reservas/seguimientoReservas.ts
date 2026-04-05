@@ -34,6 +34,7 @@ export type RecepcionDevolucionRegistro = Omit<
   botonesCierresCobro?: number | string | null;
   ruedosTelasCobro?: number | string | null;
   danoGraveCobro?: number | string | null;
+  resueltoPor: { id: string; name: string } | null;
 };
 
 export type ReservaDetalleOperativo = {

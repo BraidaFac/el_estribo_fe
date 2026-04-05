@@ -1,6 +1,8 @@
 "use client";
 
-import ConfirmModal, { type ConfirmModalRef } from "@/lib/components/ConfirmModal";
+import ConfirmModal, {
+  type ConfirmModalRef,
+} from "@/lib/components/ConfirmModal";
 import { ControlPreEntregaModal } from "@/lib/components/planillas/ControlPreEntregaModal";
 import type { PlanillaPrepararFila } from "@/lib/domain/control-pre-entrega/types";
 import { fetchPlanillaPrepararEntrega } from "@/lib/services/v2/control-pre-entrega-v2.service";
@@ -26,11 +28,7 @@ function rowPriorityClass(fila: PlanillaPrepararFila): string {
   if (tieneTareasPendientes && diasHastaReserva <= 1) {
     return "bg-red-50/90 border-l-4 border-l-red-400";
   }
-  if (
-    tieneTareasPendientes &&
-    diasHastaReserva >= 2 &&
-    diasHastaReserva <= 4
-  ) {
+  if (tieneTareasPendientes && diasHastaReserva >= 2 && diasHastaReserva <= 4) {
     return "bg-amber-50/90 border-l-4 border-l-amber-400";
   }
   return "";
@@ -104,21 +102,9 @@ export function PlanillaPrepararEntregaPage() {
       />
 
       <div className="rounded-lg border border-pastel-border bg-pastel-surface p-4">
-        <h1 className="text-2xl font-semibold text-pastel-text">Preparar para entrega</h1>
-        <p className="mt-1 text-sm text-pastel-text/80">
-          Reservas en tienda (próximos 10 días) sin control pre-entrega. Solo puede iniciarse
-          si no hay tareas operativas abiertas.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-3 text-xs text-pastel-text/60">
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-3 w-3 rounded-sm bg-red-200" /> Urgente (0–1 día y
-            tareas pendientes)
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block h-3 w-3 rounded-sm bg-amber-200" /> Atención (2–4 días y
-            tareas pendientes)
-          </span>
-        </div>
+        <h1 className="text-2xl font-semibold text-pastel-text">
+          Preparar para entrega
+        </h1>
         <Button
           size="sm"
           variant="flat"
@@ -138,9 +124,13 @@ export function PlanillaPrepararEntregaPage() {
         <Table aria-label="Preparar para entrega">
           <TableHeader>
             <TableColumn className={TABLE_HEADER_CLASS}>Reserva</TableColumn>
-            <TableColumn className={TABLE_HEADER_CLASS}>Fecha evento</TableColumn>
+            <TableColumn className={TABLE_HEADER_CLASS}>
+              Fecha evento
+            </TableColumn>
             <TableColumn className={TABLE_HEADER_CLASS}>Cliente</TableColumn>
-            <TableColumn className={TABLE_HEADER_CLASS}>Días hasta evento</TableColumn>
+            <TableColumn className={TABLE_HEADER_CLASS}>
+              Días hasta evento
+            </TableColumn>
             <TableColumn className={TABLE_HEADER_CLASS}>Tareas</TableColumn>
             <TableColumn className={TABLE_HEADER_CLASS}>Acción</TableColumn>
           </TableHeader>

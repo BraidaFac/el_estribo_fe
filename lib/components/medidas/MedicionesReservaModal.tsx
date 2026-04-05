@@ -78,6 +78,8 @@ type Props = {
   reservaId: number | null;
   /** Si false, oculta bloque pantalón (reserva sin pantalón). */
   tienePantalon: boolean;
+  /** Si true, los campos son solo lectura y el footer muestra solo "Cerrar". */
+  readOnly?: boolean;
   onGuardado?: () => void;
 };
 
@@ -86,9 +88,11 @@ export function MedicionesReservaModal({
   onOpenChange,
   reservaId,
   tienePantalon,
+  readOnly = false,
   onGuardado,
 }: Props) {
   const [mediciones, setMediciones] = useState<MedicionesReservaJson>(() => vacias());
+  const [creadoPor, setCreadoPor] = useState<{ id: string; name: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -98,9 +102,11 @@ export function MedicionesReservaModal({
       setLoading(true);
       const r = await obtenerMedicionesReserva(reservaId);
       setMediciones(r.mediciones);
+      setCreadoPor(r.creadoPor ?? null);
     } catch (e) {
       toast.error(getUserFacingErrorMessage(e));
       setMediciones(vacias());
+      setCreadoPor(null);
     } finally {
       setLoading(false);
     }
@@ -108,7 +114,7 @@ export function MedicionesReservaModal({
 
   useEffect(() => {
     if (isOpen && reservaId) void cargar();
-    if (!isOpen) setMediciones(vacias());
+    if (!isOpen) { setMediciones(vacias()); setCreadoPor(null); }
   }, [isOpen, reservaId, cargar]);
 
   const setSaco = (key: keyof MedidasSaco, raw: string) => {
@@ -156,6 +162,11 @@ export function MedicionesReservaModal({
               Reserva #{reservaId} · valores en centímetros (opcionales)
             </span>
           )}
+          {readOnly && creadoPor && (
+            <span className="text-xs font-normal text-pastel-text/60">
+              Cargado por: {creadoPor.name}
+            </span>
+          )}
         </ModalHeader>
         <ModalBody className="gap-4 py-4">
           {!reservaId ? (
@@ -179,6 +190,7 @@ export function MedicionesReservaModal({
                       placeholder="cm"
                       type="text"
                       inputMode="decimal"
+                      isReadOnly={readOnly}
                       value={numToInput(mediciones.saco[key])}
                       onValueChange={(v) => setSaco(key, v)}
                       classNames={{ label: "text-xs" }}
@@ -201,6 +213,7 @@ export function MedicionesReservaModal({
                         placeholder="cm"
                         type="text"
                         inputMode="decimal"
+                        isReadOnly={readOnly}
                         value={numToInput(mediciones.pantalon[key])}
                         onValueChange={(v) => setPant(key, v)}
                         classNames={{ label: "text-xs" }}
@@ -217,17 +230,25 @@ export function MedicionesReservaModal({
           )}
         </ModalBody>
         <ModalFooter className="border-t border-pastel-border">
-          <Button variant="light" onPress={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button
-            color="primary"
-            onPress={guardar}
-            isDisabled={!reservaId || loading}
-            isLoading={saving}
-          >
-            Guardar
-          </Button>
+          {readOnly ? (
+            <Button variant="light" onPress={() => onOpenChange(false)}>
+              Cerrar
+            </Button>
+          ) : (
+            <>
+              <Button variant="light" onPress={() => onOpenChange(false)}>
+                Cancelar
+              </Button>
+              <Button
+                color="primary"
+                onPress={guardar}
+                isDisabled={!reservaId || loading}
+                isLoading={saving}
+              >
+                Guardar
+              </Button>
+            </>
+          )}
         </ModalFooter>
       </ModalContent>
     </Modal>

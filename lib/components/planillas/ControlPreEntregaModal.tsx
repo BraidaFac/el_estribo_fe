@@ -5,7 +5,6 @@ import { crearControlPreEntrega } from "@/lib/services/v2/control-pre-entrega-v2
 import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
 import {
   Button,
-  Input,
   Modal,
   ModalBody,
   ModalContent,
@@ -41,7 +40,6 @@ const emptyForm = () => ({
   complementosObs: "",
   resultado: "APROBADO" as "APROBADO" | "RECHAZADO",
   motivoRechazo: "",
-  auditorNombre: "",
 });
 
 export function ControlPreEntregaModal({
@@ -77,10 +75,6 @@ export function ControlPreEntregaModal({
 
   const handleSubmit = async () => {
     if (reservaId == null) return;
-    if (!form.auditorNombre.trim()) {
-      toast.error("Indique el nombre del auditor");
-      return;
-    }
     if (form.resultado === "RECHAZADO" && !form.motivoRechazo.trim()) {
       toast.error("El motivo de rechazo es obligatorio");
       return;
@@ -100,7 +94,6 @@ export function ControlPreEntregaModal({
       estado: form.resultado,
       motivoRechazo:
         form.resultado === "RECHAZADO" ? form.motivoRechazo.trim() : undefined,
-      auditorNombre: form.auditorNombre.trim(),
     };
     try {
       setSaving(true);
@@ -238,12 +231,6 @@ export function ControlPreEntregaModal({
                 />
               ) : null}
 
-              <Input
-                label="Auditor (nombre)"
-                description="Quien realiza el control (texto libre)"
-                value={form.auditorNombre}
-                onValueChange={(v) => setForm((f) => ({ ...f, auditorNombre: v }))}
-              />
             </ModalBody>
             <ModalFooter>
               <Button variant="flat" onPress={onClose}>

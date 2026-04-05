@@ -52,7 +52,6 @@ export type EnviarLavanderiaReservaPayload = {
   sacoLavanderiaId?: number;
   pantalonVaALavanderia?: boolean;
   pantalonLavanderiaId?: number;
-  usuarioId?: string;
 };
 
 export async function registrarEnvioLavanderiaPorReserva(
@@ -67,7 +66,7 @@ export async function registrarEnvioLavanderiaPorReserva(
 
 export async function registrarRecibirLavanderiaPorReserva(
   reservaId: number,
-  payload?: { usuarioId?: string; motivo?: string },
+  payload?: { motivo?: string },
 ): Promise<void> {
   await apiFetch<void>(`/v2/tareas-operativas/reservas/${reservaId}/recibir-lavanderia`, {
     method: "POST",
@@ -80,7 +79,6 @@ export type EnviarModistaReservaPayload = {
   sacoModistaId?: number;
   pantalonVaAModista?: boolean;
   pantalonModistaId?: number;
-  usuarioId?: string;
 };
 
 export async function registrarEnvioModistaPorReserva(
@@ -95,7 +93,7 @@ export async function registrarEnvioModistaPorReserva(
 
 export async function registrarRecibirModistaPorReserva(
   reservaId: number,
-  payload?: { usuarioId?: string; motivo?: string },
+  payload?: { motivo?: string },
 ): Promise<void> {
   await apiFetch<void>(`/v2/tareas-operativas/reservas/${reservaId}/recibir-modista`, {
     method: "POST",

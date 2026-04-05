@@ -38,6 +38,16 @@ const BLOQUEO_CELL_CLASS: Record<TipoBloqueo, string> = {
   MANTENIMIENTO: "bg-amber-50 border-amber-200 text-amber-900 hover:bg-amber-100",
 };
 
+const TIPO_BLOQUEO_PRIORITY: TipoBloqueo[] = [
+  "RESERVA",
+  "LISTO_TIENDA",
+  "MEDICION",
+  "MODISTA",
+  "LAVANDERIA",
+  "MANUAL",
+  "MANTENIMIENTO",
+];
+
 export function CalendarDayCell({ model, onPress }: CalendarDayCellProps) {
   const labelBadges: { label: string; className: string }[] =
     model.estado === "NO_LABORABLE"
@@ -52,14 +62,13 @@ export function CalendarDayCell({ model, onPress }: CalendarDayCellProps) {
           className: BLOQUEO_BADGE_CLASS[tipo],
         }));
 
-  const singleTipoBloqueo =
-    model.estado === "BLOQUEADO" && model.tiposBloqueoActivos.length === 1
-      ? model.tiposBloqueoActivos[0]
+  const dominantTipo =
+    model.estado === "BLOQUEADO"
+      ? (TIPO_BLOQUEO_PRIORITY.find((t) => model.tiposBloqueoActivos.includes(t)) ?? null)
       : null;
-  const cellClass =
-    singleTipoBloqueo && model.estado === "BLOQUEADO"
-      ? BLOQUEO_CELL_CLASS[singleTipoBloqueo]
-      : STATE_CLASS[model.estado];
+  const cellClass = dominantTipo
+    ? BLOQUEO_CELL_CLASS[dominantTipo]
+    : STATE_CLASS[model.estado];
 
   const accessibilityDescription = `Dia ${model.dayNumber}. Estado ${model.estado}. ${
     labelBadges.length > 0

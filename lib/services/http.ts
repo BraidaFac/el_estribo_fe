@@ -1,6 +1,9 @@
 import { API_BACKEND } from "@/lib/utils/constanst";
-import { getCookie } from "cookies-next";
+import { deleteCookie, getCookie } from "cookies-next";
 import { extractBearerToken } from "./auth.service";
+
+/** 401 en estos endpoints no implica sesión caducada (p. ej. contraseña incorrecta). */
+const AUTH_401_WITHOUT_SESSION_REDIRECT = ["/auth/login"];
 
 export class ApiError extends Error {
   status: number;
@@ -38,7 +41,25 @@ export async function apiFetch<T>(
 
   if (!response.ok) {
     const errorBody = await safeJsonParse(response);
-    const message = getErrorMessage(errorBody, response.status, response.statusText);
+    const message = getErrorMessage(
+      errorBody,
+      response.status,
+      response.statusText,
+    );
+
+    if (response.status === 401) {
+      deleteCookie("Authorization");
+      const skipRedirect = AUTH_401_WITHOUT_SESSION_REDIRECT.some((prefix) =>
+        endpoint.startsWith(prefix),
+      );
+      if (
+        typeof window !== "undefined" &&
+        !skipRedirect &&
+        window.location.pathname !== "/login"
+      ) {
+        window.location.replace("/login");
+      }
+    }
     throw new ApiError(message, response.status, errorBody);
   }
 

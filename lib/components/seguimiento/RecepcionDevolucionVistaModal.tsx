@@ -1,6 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import type { ReservaExtraItem } from "@/lib/domain/accesorios/types";
+import { getAccesorioIcon } from "@/lib/domain/accesorios/iconosAccesorios";
 import {
   labelBotonesCierres,
   labelDecisionLavado,
@@ -9,6 +11,7 @@ import {
   labelRuedosTelas,
 } from "@/lib/domain/reservas/recepcionDevolucionLabels";
 import type { RecepcionDevolucionRegistro } from "@/lib/domain/reservas/seguimientoReservas";
+import { obtenerExtrasReserva } from "@/lib/services/v2/accesorios-v2.service";
 import { formatApiDateForUi, formatApiDateTimeForUi } from "@/lib/utils/formatApiDate";
 import { formatMoneyAr } from "@/lib/utils/formatMoney";
 import {
@@ -18,13 +21,16 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
+  Spinner,
 } from "@heroui/react";
+import { useEffect, useState } from "react";
 
 export type RecepcionDevolucionVistaModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   numeroReservaLabel: string;
   data: RecepcionDevolucionRegistro | null;
+  reservaId: number | null;
 };
 
 function fila(label: string, value: ReactNode) {
@@ -41,7 +47,23 @@ export function RecepcionDevolucionVistaModal({
   onOpenChange,
   numeroReservaLabel,
   data,
+  reservaId,
 }: RecepcionDevolucionVistaModalProps) {
+  const [extras, setExtras] = useState<ReservaExtraItem[]>([]);
+  const [loadingExtras, setLoadingExtras] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || !reservaId) {
+      setExtras([]);
+      return;
+    }
+    setLoadingExtras(true);
+    obtenerExtrasReserva(reservaId)
+      .then(setExtras)
+      .catch(() => setExtras([]))
+      .finally(() => setLoadingExtras(false));
+  }, [isOpen, reservaId]);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -72,6 +94,7 @@ export function RecepcionDevolucionVistaModal({
               <p className="text-xs text-pastel-text/70">
                 Fecha devolución: <strong>{formatApiDateForUi(data.fechaDevolucion)}</strong> · Alta:{" "}
                 {formatApiDateTimeForUi(data.createdAt)}
+                {data.resueltoPor ? ` · Registrado por: ${data.resueltoPor.name}` : ""}
               </p>
               <div>
                 <p className="mb-2 text-sm font-semibold text-pastel-text">Inspección y cobros</p>
@@ -101,6 +124,48 @@ export function RecepcionDevolucionVistaModal({
               </div>
             </>
           )}
+
+          {/* Accesorios */}
+          <div className="space-y-2 border-t border-pastel-border/70 pt-3">
+            <p className="text-sm font-semibold text-pastel-text">Accesorios</p>
+            {loadingExtras ? (
+              <div className="flex h-8 items-center justify-center">
+                <Spinner size="sm" color="secondary" />
+              </div>
+            ) : extras.length === 0 ? (
+              <p className="text-sm text-pastel-text/50">Sin accesorios registrados.</p>
+            ) : (
+              <div className="space-y-2">
+                {extras.map((e) => {
+                  const Icon = getAccesorioIcon(e.accesorio.icono);
+                  return (
+                    <div
+                      key={e.id}
+                      className="flex items-start gap-3 rounded-lg border border-pastel-border bg-pastel-soft/60 px-3 py-2 text-sm"
+                    >
+                      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-pastel-text/70" aria-hidden />
+                      <div className="flex-1 space-y-0.5">
+                        <span className="font-medium text-pastel-text">
+                          {e.accesorio.nombre}
+                        </span>
+                        {e.observacion && (
+                          <p className="text-pastel-text/60">{e.observacion}</p>
+                        )}
+                        <p className="text-pastel-text/70">
+                          {e.devuelto === null
+                            ? "Sin registrar devolución"
+                            : e.devuelto
+                              ? "Devuelto"
+                              : "No devuelto"}
+                          {e.observacionDevolucion && ` — ${e.observacionDevolucion}`}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </ModalBody>
         <ModalFooter className="border-t border-pastel-border/70">
           <Button color="primary" variant="flat" onPress={() => onOpenChange(false)}>
