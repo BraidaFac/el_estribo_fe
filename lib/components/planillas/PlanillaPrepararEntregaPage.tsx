@@ -128,6 +128,8 @@ export function PlanillaPrepararEntregaPage() {
               Fecha evento
             </TableColumn>
             <TableColumn className={TABLE_HEADER_CLASS}>Cliente</TableColumn>
+            <TableColumn className={TABLE_HEADER_CLASS}>Saco</TableColumn>
+            <TableColumn className={TABLE_HEADER_CLASS}>Pantalón</TableColumn>
             <TableColumn className={TABLE_HEADER_CLASS}>
               Días hasta evento
             </TableColumn>
@@ -140,6 +142,8 @@ export function PlanillaPrepararEntregaPage() {
                 <TableCell>#{fila.reservaId}</TableCell>
                 <TableCell>{formatApiDateForUi(fila.fechaReserva)}</TableCell>
                 <TableCell>{fila.clienteNombre}</TableCell>
+                <TableCell>{fila.sacocodigo}</TableCell>
+                <TableCell>{fila.pantalonCodigo ?? "Sin Pantalon"}</TableCell>
                 <TableCell>{fila.diasHastaReserva}</TableCell>
                 <TableCell>
                   {fila.tieneTareasPendientes ? (

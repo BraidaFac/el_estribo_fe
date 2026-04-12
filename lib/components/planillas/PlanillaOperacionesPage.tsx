@@ -5,6 +5,7 @@ import { AccesoriosRetiroModal } from "@/lib/components/accesorios/AccesoriosRet
 import { MedicionesReservaModal } from "@/lib/components/medidas/MedicionesReservaModal";
 import { EnvioLavanderiaReservaModal } from "@/lib/components/planillas/EnvioLavanderiaReservaModal";
 import { EnvioModistaReservaModal } from "@/lib/components/planillas/EnvioModistaReservaModal";
+import { RecibirModistaModal } from "@/lib/components/planillas/RecibirModistaModal";
 import { DevolucionRecepcionModal } from "@/lib/components/reservas/DevolucionRecepcionModal";
 import { RecordatorioRetiroModal } from "@/lib/components/planillas/RecordatorioRetiroModal";
 import { ApiDateField } from "@/lib/components/ui/ApiDateField";
@@ -19,6 +20,7 @@ import {
 import {
   prendasEnTiendaParaRetiroCliente,
   reservaTieneTareasOperativasAbiertas,
+  tareaConPrendaEnTienda,
 } from "@/lib/domain/reservas/retiroCliente";
 import type { AccesorioItem } from "@/lib/domain/accesorios/types";
 import { Reserva, TareaOperativa } from "@/lib/domain/reservas/types";
@@ -132,6 +134,10 @@ export function PlanillaOperacionesPage({
   const [retiroConfirming, setRetiroConfirming] = useState(false);
   const [recordatorioOpen, setRecordatorioOpen] = useState(false);
   const [retiroPendingReserva, setRetiroPendingReserva] = useState<Reserva | null>(null);
+  const [recibirModistaOpen, setRecibirModistaOpen] = useState(false);
+  const [recibirModistaLoading, setRecibirModistaLoading] = useState(false);
+  const [recibirModistaGrupo, setRecibirModistaGrupo] = useState<GrupoTareasReserva | null>(null);
+  const [recibirModistaTareaId, setRecibirModistaTareaId] = useState<number | null>(null);
 
   const canSearch = !!desde && !!hasta;
 
@@ -253,24 +259,47 @@ export function PlanillaOperacionesPage({
     }
   };
 
-  const handleRecibirGrupoModista = async (reservaId: number) => {
+  const handleRecibirGrupoModista = (grupo: GrupoTareasReserva) => {
+    setRecibirModistaGrupo(grupo);
+    setRecibirModistaTareaId(null);
+    setRecibirModistaOpen(true);
+  };
+
+  const handleRecibirModistaTarea = (tarea: TareaOperativa) => {
+    setRecibirModistaGrupo(null);
+    setRecibirModistaTareaId(tarea.id);
+    setRecibirModistaOpen(true);
+  };
+
+  const handleConfirmarRecibirModista = async (costoModista: number) => {
     try {
-      await registrarRecibirModistaPorReserva(reservaId);
-      toast.success("Prendas recibidas de modista");
+      setRecibirModistaLoading(true);
+      if (recibirModistaGrupo) {
+        await registrarRecibirModistaPorReserva(recibirModistaGrupo.reservaId, { costoModista });
+        toast.success("Prendas recibidas de modista");
+      } else if (recibirModistaTareaId) {
+        await marcarRecibidoModista(recibirModistaTareaId, { costoModista });
+        toast.success("Prenda recibida de modista");
+      }
+      setRecibirModistaOpen(false);
+      setRecibirModistaGrupo(null);
+      setRecibirModistaTareaId(null);
       await handleSearch();
     } catch (error) {
       toast.error(getUserFacingErrorMessage(error));
+    } finally {
+      setRecibirModistaLoading(false);
     }
   };
 
-  const handleRecibirModistaTarea = async (tarea: TareaOperativa) => {
-    try {
-      await marcarRecibidoModista(tarea.id);
-      toast.success("Prenda recibida de modista");
-      await handleSearch();
-    } catch (error) {
-      toast.error(getUserFacingErrorMessage(error));
-    }
+  const nombreModistaParaModal = (): string => {
+    const grupo = recibirModistaGrupo;
+    if (!grupo) return "la modista";
+    return (
+      grupo.tareas[0]?.reserva?.asignacionesServicio
+        ?.find((a) => a.tipoPrenda === "SACO")
+        ?.modista?.nombre ?? "la modista"
+    );
   };
 
   const handleConfirmarRetiroConExtras = async (
@@ -334,51 +363,6 @@ export function PlanillaOperacionesPage({
       );
       return;
     }
-    /*   if (conAdvertencia && reserva.estadoReserva === "CONFIRMADA") {
-      void confirmDestructive({
-        title: "Tareas pendientes",
-        message:
-          "Esta reserva todavía tiene tareas pendientes. ¿Desea preparar la entrega y retirar igual el traje?",
-        confirmText: "Preparar entrega y retirar",
-        variant: "warning",
-        action: async () => {
-          setModalPrepararEntregaOperativas(true);
-        },
-      });
-
-      return;
-    }
-    if (conAdvertencia && reserva.estadoReserva === "LISTO_PARA_ENTREGAR") {
-      void confirmDestructive({
-        title: "Tareas pendientes",
-        message:
-          "Esta reserva todavía tiene tareas pendientes. ¿Desea retirar igual el traje?",
-        confirmText: "Retirar igual",
-        variant: "warning",
-        action: async () => {
-          try {
-            await ejecutarRetiroCliente();
-          } catch (error) {
-            toast.error(getUserFacingErrorMessage(error));
-            throw error;
-          }
-        },
-      });
-      return;
-    }
-    if (reserva.estadoReserva !== "LISTO_PARA_ENTREGAR") {
-      void confirmDestructive({
-        title: "Reserva no lista para entregar",
-        message:
-          "¿Desea preparar la entrega y retirar igual el traje?",
-        confirmText: "Preparar entrega y retirar",
-        variant: "warning",
-        action: async () => {
-          setModalPrepararEntregaOperativas(true);
-        },
-      });
-      return;
-    } */
 
     // Abrir modal de accesorios antes de ejecutar el retiro
     setRetiroAccesoriosReserva(reserva);
@@ -389,6 +373,11 @@ export function PlanillaOperacionesPage({
         .catch(() => setAccesorios([]))
         .finally(() => setLoadingAccesorios(false));
     }
+  };
+
+  const grupoTieneSacoEnTienda = (grupo: GrupoTareasReserva): boolean => {
+    const sacoTask = grupo.tareas.find((t) => t.tipoPrenda === "SACO");
+    return sacoTask ? tareaConPrendaEnTienda(sacoTask) : false;
   };
 
   const renderCeldaPrendas = (grupo: GrupoTareasReserva) => (
@@ -464,6 +453,19 @@ export function PlanillaOperacionesPage({
         onGuardado={() => ejecutarRetiroCliente()}
       /> */}
 
+      <RecibirModistaModal
+        isOpen={recibirModistaOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRecibirModistaOpen(false);
+            setRecibirModistaGrupo(null);
+            setRecibirModistaTareaId(null);
+          }
+        }}
+        nombreModista={nombreModistaParaModal()}
+        isLoading={recibirModistaLoading}
+        onConfirmar={(costo) => void handleConfirmarRecibirModista(costo)}
+      />
       <MedicionesReservaModal
         isOpen={medModalReservaId != null}
         onOpenChange={(open) => {
@@ -589,13 +591,21 @@ export function PlanillaOperacionesPage({
                   <TableCell key="p">{renderCeldaPrendas(grupo)}</TableCell>,
                   <TableCell key="a">
                     {mode === "LLEVAR_LAVANDERIA" ? (
-                      <Button
-                        size="sm"
-                        color="primary"
-                        onPress={() => abrirModalLavanderia(grupo)}
+                      <Tooltip
+                        content="El traje no está disponible en el local"
+                        isDisabled={grupoTieneSacoEnTienda(grupo)}
                       >
-                        Registrar envío a lavandería
-                      </Button>
+                        <span>
+                          <Button
+                            size="sm"
+                            color="primary"
+                            isDisabled={!grupoTieneSacoEnTienda(grupo)}
+                            onPress={() => abrirModalLavanderia(grupo)}
+                          >
+                            Registrar envío a lavandería
+                          </Button>
+                        </span>
+                      </Tooltip>
                     ) : mode === "RETIRAR_LAVANDERIA" ? (
                       <Button
                         size="sm"
@@ -616,22 +626,28 @@ export function PlanillaOperacionesPage({
                         >
                           Ver Mediciones
                         </Button>
-                        <Button
-                          size="sm"
-                          color="primary"
-                          onPress={() => abrirModalModista(grupo)}
+                        <Tooltip
+                          content="El traje no está disponible en el local"
+                          isDisabled={grupoTieneSacoEnTienda(grupo)}
                         >
-                          Registrar envío a modista
-                        </Button>
+                          <span>
+                            <Button
+                              size="sm"
+                              color="primary"
+                              isDisabled={!grupoTieneSacoEnTienda(grupo)}
+                              onPress={() => abrirModalModista(grupo)}
+                            >
+                              Registrar envío a modista
+                            </Button>
+                          </span>
+                        </Tooltip>
                       </div>
                     ) : (
                       <div className="flex flex-row gap-1">
                         <Button
                           size="sm"
                           color="secondary"
-                          onPress={() =>
-                            void handleRecibirGrupoModista(grupo.reservaId)
-                          }
+                          onPress={() => handleRecibirGrupoModista(grupo)}
                         >
                           Recibir todo ({grupo.tareas.length})
                         </Button>
@@ -640,7 +656,7 @@ export function PlanillaOperacionesPage({
                             key={t.id}
                             size="sm"
                             variant="flat"
-                            onPress={() => void handleRecibirModistaTarea(t)}
+                            onPress={() => handleRecibirModistaTarea(t)}
                           >
                             Solo{" "}
                             {t.saco

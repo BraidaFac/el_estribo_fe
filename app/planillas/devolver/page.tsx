@@ -1,11 +1,10 @@
-import { PlanillaOperacionesPage } from "@/lib/components/planillas/PlanillaOperacionesPage";
-import { planillaOperacionesDocumentTitle } from "@/lib/planillas/planillaOperacionesConfig";
+import { PlanillaRetirarLavanderiaPage } from "@/lib/components/planillas/PlanillaRetirarLavanderiaPage";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: planillaOperacionesDocumentTitle("RETIRAR_LAVANDERIA"),
+  title: "Retirar de Lavandería",
 };
 
 export default function PlanillaDevolverPage() {
-  return <PlanillaOperacionesPage mode="RETIRAR_LAVANDERIA" />;
+  return <PlanillaRetirarLavanderiaPage />;
 }

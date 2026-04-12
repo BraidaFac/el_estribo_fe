@@ -22,3 +22,21 @@ export function reservaTieneTareasOperativasAbiertas(
       t.estado !== "CANCELADA",
   );
 }
+
+/**
+ * True si la prenda directa de la tarea (LLEVAR_LAVANDERIA / LLEVAR_MODISTA) está en tienda.
+ * Usa tarea.saco o tarea.pantalon según tipoPrenda.
+ */
+export function tareaConPrendaEnTienda(tarea: TareaOperativa): boolean {
+  if (tarea.tipoPrenda === "SACO") return tarea.saco?.ubicacionActual === "TIENDA";
+  if (tarea.tipoPrenda === "PANTALON") return tarea.pantalon?.ubicacionActual === "TIENDA";
+  return false;
+}
+
+/**
+ * True si el saco de la reserva vinculada a la tarea está en tienda.
+ * Para tareas CONTACTAR_MEDICION (requiere join reserva.saco en el backend).
+ */
+export function sacoReservaEnTienda(tarea: TareaOperativa): boolean {
+  return tarea.reserva?.saco?.ubicacionActual === "TIENDA";
+}

@@ -146,7 +146,14 @@ export async function obtenerMedicionesReserva(
 
 export async function guardarMedicionesReserva(
   reservaId: number,
-  payload: { saco?: Partial<MedicionesReservaJson["saco"]>; pantalon?: Partial<MedicionesReservaJson["pantalon"]> },
+  payload: {
+    saco?: Partial<MedicionesReservaJson["saco"]>;
+    pantalon?: Partial<MedicionesReservaJson["pantalon"]>;
+    observacionSaco?: string;
+    observacionPantalon?: string;
+    observacionGeneral?: string;
+    sinModista?: boolean;
+  },
 ): Promise<MedicionesReservaResponse> {
   return apiFetch<MedicionesReservaResponse>(`/v2/reservas/${reservaId}/mediciones`, {
     method: "PUT",

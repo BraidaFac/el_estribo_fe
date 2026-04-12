@@ -32,11 +32,27 @@ export function formatApiDateForUi(value: string | null | undefined): string {
 }
 
 /**
- * Fecha y hora ISO del API → `dd/MM/yyyy, HH:mm` (locale APP_LOCALE, zona APP_TIME_ZONE).
+ * Fecha y hora ISO del API → `dd/MM/yyyy, HH:mm`.
+ * El backend guarda timestamps sin indicador de zona (hora de sistema del servidor).
+ * Se normaliza siempre a UTC para que la hora mostrada sea exactamente la almacenada,
+ * sin importar el timezone del navegador.
  */
 export function formatApiDateTimeForUi(value: string | null | undefined): string {
   if (value == null || value.trim() === "") return "-";
-  const d = new Date(value);
+  let normalized = value.trim();
+  // normalizar separador MySQL: "2026-04-12 09:50:43" → "2026-04-12T09:50:43"
+  if (normalized.includes(" ") && !normalized.includes("T")) {
+    normalized = normalized.replace(" ", "T");
+  }
+  // agregar Z si no hay indicador de timezone
+  const hasOffset =
+    normalized.endsWith("Z") ||
+    normalized.indexOf("+", 10) !== -1 ||
+    normalized.indexOf("-", 10) !== -1;
+  if (!hasOffset) {
+    normalized += "Z";
+  }
+  const d = new Date(normalized);
   if (Number.isNaN(d.getTime())) return value;
   return new Intl.DateTimeFormat(APP_LOCALE, {
     day: "2-digit",

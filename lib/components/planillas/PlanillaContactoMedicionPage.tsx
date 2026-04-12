@@ -7,6 +7,7 @@ import {
 } from "@/lib/domain/reservas/labels";
 import { TareaOperativa } from "@/lib/domain/reservas/types";
 import { buildWhatsappContactoMedicionMessage } from "@/lib/domain/reservas/whatsappContactoMedicion";
+import { sacoReservaEnTienda } from "@/lib/domain/reservas/retiroCliente";
 import {
   listarAgendaMediciones,
   listarTareasOperativas,
@@ -34,6 +35,7 @@ import {
   TableRow,
   Textarea,
   TimeInput,
+  Tooltip,
 } from "@heroui/react";
 import { Time, parseDate } from "@internationalized/date";
 import { addDays, differenceInCalendarDays, format, parseISO } from "date-fns";
@@ -405,20 +407,25 @@ export function PlanillaContactoMedicionPage() {
                       >
                         {agendada ? "Re agendar" : "Agendar"}
                       </Button>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="bordered"
-                        aria-label="Registrar mediciones"
-                        isDisabled={!row.reserva?.id}
-                        onPress={() =>
-                          row.reserva?.id &&
-                          setMedicionesCtx({
-                            reservaId: row.reserva.id,
-                            tienePantalon: Boolean(row.reserva.pantalon),
-                          })
-                        }
+                      <Tooltip
+                        content="El traje no está disponible en el local"
+                        isDisabled={sacoReservaEnTienda(row)}
                       >
+                        <span>
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="bordered"
+                            aria-label="Registrar mediciones"
+                            isDisabled={!row.reserva?.id || !sacoReservaEnTienda(row)}
+                            onPress={() =>
+                              row.reserva?.id &&
+                              setMedicionesCtx({
+                                reservaId: row.reserva.id,
+                                tienePantalon: Boolean(row.reserva.pantalon),
+                              })
+                            }
+                          >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width={20}
@@ -434,7 +441,9 @@ export function PlanillaContactoMedicionPage() {
                           <path d="M15 3v18M9 3v18M3 9h18M3 15h18" />
                           <path d="M3 9a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9z" />
                         </svg>
-                      </Button>
+                          </Button>
+                        </span>
+                      </Tooltip>
                     </div>
                   </TableCell>
                 </TableRow>

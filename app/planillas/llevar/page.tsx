@@ -1,11 +1,10 @@
-import { PlanillaOperacionesPage } from "@/lib/components/planillas/PlanillaOperacionesPage";
-import { planillaOperacionesDocumentTitle } from "@/lib/planillas/planillaOperacionesConfig";
+import { PlanillaLlevarLavanderiaPage } from "@/lib/components/planillas/PlanillaLlevarLavanderiaPage";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: planillaOperacionesDocumentTitle("LLEVAR_LAVANDERIA"),
+  title: "Llevar a Lavandería",
 };
 
 export default function PlanillaLlevarPage() {
-  return <PlanillaOperacionesPage mode="LLEVAR_LAVANDERIA" />;
+  return <PlanillaLlevarLavanderiaPage />;
 }

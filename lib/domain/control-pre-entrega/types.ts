@@ -35,6 +35,8 @@ export type PlanillaPrepararFila = {
   diasHastaReserva: number;
   tieneTareasPendientes: boolean;
   puedeIniciarPreEntrega: boolean;
+  sacocodigo: string;
+  pantalonCodigo: string | null;
 };
 
 export type RechazoPreEntregaFila = {

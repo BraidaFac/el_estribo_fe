@@ -8,6 +8,7 @@ import {
 import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
 import {
   Button,
+  Checkbox,
   Input,
   Modal,
   ModalBody,
@@ -15,6 +16,7 @@ import {
   ModalFooter,
   ModalHeader,
   Spinner,
+  Textarea,
 } from "@heroui/react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -93,8 +95,21 @@ export function MedicionesReservaModal({
 }: Props) {
   const [mediciones, setMediciones] = useState<MedicionesReservaJson>(() => vacias());
   const [creadoPor, setCreadoPor] = useState<{ id: string; name: string } | null>(null);
+  const [sinModista, setSinModista] = useState(false);
+  const [observacionSaco, setObservacionSaco] = useState("");
+  const [observacionPantalon, setObservacionPantalon] = useState("");
+  const [observacionGeneral, setObservacionGeneral] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const reset = () => {
+    setMediciones(vacias());
+    setCreadoPor(null);
+    setSinModista(false);
+    setObservacionSaco("");
+    setObservacionPantalon("");
+    setObservacionGeneral("");
+  };
 
   const cargar = useCallback(async () => {
     if (!reservaId) return;
@@ -103,10 +118,13 @@ export function MedicionesReservaModal({
       const r = await obtenerMedicionesReserva(reservaId);
       setMediciones(r.mediciones);
       setCreadoPor(r.creadoPor ?? null);
+      setSinModista(r.sinModista);
+      setObservacionSaco(r.observacionSaco ?? "");
+      setObservacionPantalon(r.observacionPantalon ?? "");
+      setObservacionGeneral(r.observacionGeneral ?? "");
     } catch (e) {
       toast.error(getUserFacingErrorMessage(e));
-      setMediciones(vacias());
-      setCreadoPor(null);
+      reset();
     } finally {
       setLoading(false);
     }
@@ -114,7 +132,7 @@ export function MedicionesReservaModal({
 
   useEffect(() => {
     if (isOpen && reservaId) void cargar();
-    if (!isOpen) { setMediciones(vacias()); setCreadoPor(null); }
+    if (!isOpen) reset();
   }, [isOpen, reservaId, cargar]);
 
   const setSaco = (key: keyof MedidasSaco, raw: string) => {
@@ -133,8 +151,12 @@ export function MedicionesReservaModal({
     try {
       setSaving(true);
       await guardarMedicionesReserva(reservaId, {
-        saco: mediciones.saco,
-        pantalon: tienePantalon ? mediciones.pantalon : undefined,
+        saco: sinModista ? undefined : mediciones.saco,
+        pantalon: tienePantalon && !sinModista ? mediciones.pantalon : undefined,
+        observacionSaco: observacionSaco || undefined,
+        observacionPantalon: tienePantalon ? (observacionPantalon || undefined) : undefined,
+        observacionGeneral: observacionGeneral || undefined,
+        sinModista,
       });
       toast.success("Mediciones guardadas");
       onGuardado?.();
@@ -145,6 +167,8 @@ export function MedicionesReservaModal({
       setSaving(false);
     }
   };
+
+  const camposDeshabilitados = readOnly || sinModista;
 
   return (
     <Modal
@@ -176,36 +200,43 @@ export function MedicionesReservaModal({
               <Spinner color="secondary" />
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2">
-              <section className="rounded-lg border border-pastel-border bg-pastel-soft/50 p-3">
-                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-pastel-text">
-                  Saco
-                </h3>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {SACO_CAMPOS.map(({ key, label }) => (
-                    <Input
-                      key={key}
+            <>
+              {!readOnly && (
+                <div className="flex flex-col gap-2">
+                  <Checkbox
+                    isSelected={sinModista}
+                    onValueChange={setSinModista}
+                  >
+                    No se necesita modista
+                  </Checkbox>
+                  {sinModista && (
+                    <Textarea
+                      label="Observación general"
+                      placeholder="Motivo por el cual no se necesita modista..."
+                      value={observacionGeneral}
+                      onValueChange={setObservacionGeneral}
                       size="sm"
-                      label={label}
-                      placeholder="cm"
-                      type="text"
-                      inputMode="decimal"
-                      isReadOnly={readOnly}
-                      value={numToInput(mediciones.saco[key])}
-                      onValueChange={(v) => setSaco(key, v)}
-                      classNames={{ label: "text-xs" }}
+                      minRows={2}
                     />
-                  ))}
+                  )}
                 </div>
-              </section>
+              )}
+              {readOnly && sinModista && (
+                <div className="rounded-lg border border-pastel-border bg-pastel-soft/50 p-3">
+                  <p className="text-sm font-medium text-pastel-text">No se necesita modista</p>
+                  {observacionGeneral && (
+                    <p className="mt-1 text-sm text-pastel-text/70">{observacionGeneral}</p>
+                  )}
+                </div>
+              )}
 
-              {tienePantalon ? (
+              <div className="grid gap-6 md:grid-cols-2">
                 <section className="rounded-lg border border-pastel-border bg-pastel-soft/50 p-3">
                   <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-pastel-text">
-                    Pantalón
+                    Saco
                   </h3>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {PANT_CAMPOS.map(({ key, label }) => (
+                    {SACO_CAMPOS.map(({ key, label }) => (
                       <Input
                         key={key}
                         size="sm"
@@ -214,19 +245,67 @@ export function MedicionesReservaModal({
                         type="text"
                         inputMode="decimal"
                         isReadOnly={readOnly}
-                        value={numToInput(mediciones.pantalon[key])}
-                        onValueChange={(v) => setPant(key, v)}
+                        isDisabled={camposDeshabilitados}
+                        value={numToInput(mediciones.saco[key])}
+                        onValueChange={(v) => setSaco(key, v)}
                         classNames={{ label: "text-xs" }}
                       />
                     ))}
                   </div>
+                  <Textarea
+                    className="mt-3"
+                    label="Observaciones saco"
+                    placeholder="Anotaciones sobre el saco..."
+                    value={observacionSaco}
+                    onValueChange={setObservacionSaco}
+                    size="sm"
+                    minRows={2}
+                    isReadOnly={readOnly}
+                    isDisabled={sinModista && !readOnly}
+                  />
                 </section>
-              ) : (
-                <section className="flex items-center justify-center rounded-lg border border-dashed border-pastel-border bg-pastel-soft/30 p-6 text-center text-sm text-pastel-text/70">
-                  Esta reserva no incluye pantalón.
-                </section>
-              )}
-            </div>
+
+                {tienePantalon ? (
+                  <section className="rounded-lg border border-pastel-border bg-pastel-soft/50 p-3">
+                    <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-pastel-text">
+                      Pantalón
+                    </h3>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {PANT_CAMPOS.map(({ key, label }) => (
+                        <Input
+                          key={key}
+                          size="sm"
+                          label={label}
+                          placeholder="cm"
+                          type="text"
+                          inputMode="decimal"
+                          isReadOnly={readOnly}
+                          isDisabled={camposDeshabilitados}
+                          value={numToInput(mediciones.pantalon[key])}
+                          onValueChange={(v) => setPant(key, v)}
+                          classNames={{ label: "text-xs" }}
+                        />
+                      ))}
+                    </div>
+                    <Textarea
+                      className="mt-3"
+                      label="Observaciones pantalón"
+                      placeholder="Anotaciones sobre el pantalón..."
+                      value={observacionPantalon}
+                      onValueChange={setObservacionPantalon}
+                      size="sm"
+                      minRows={2}
+                      isReadOnly={readOnly}
+                      isDisabled={sinModista && !readOnly}
+                    />
+                  </section>
+                ) : (
+                  <section className="flex items-center justify-center rounded-lg border border-dashed border-pastel-border bg-pastel-soft/30 p-6 text-center text-sm text-pastel-text/70">
+                    Esta reserva no incluye pantalón.
+                  </section>
+                )}
+              </div>
+            </>
           )}
         </ModalBody>
         <ModalFooter className="border-t border-pastel-border">

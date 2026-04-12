@@ -2,6 +2,7 @@ import {
   AgendaMedicion,
   EstadoAgendaMedicion,
   EstadoTareaOperativa,
+  TareaLavanderiaItem,
   TareaOperativa,
   TipoTareaOperativa,
 } from "@/lib/domain/reservas/types";
@@ -93,11 +94,11 @@ export async function registrarEnvioModistaPorReserva(
 
 export async function registrarRecibirModistaPorReserva(
   reservaId: number,
-  payload?: { motivo?: string },
+  payload: { costoModista: number; motivo?: string },
 ): Promise<void> {
   await apiFetch<void>(`/v2/tareas-operativas/reservas/${reservaId}/recibir-modista`, {
     method: "POST",
-    body: JSON.stringify(payload ?? {}),
+    body: JSON.stringify(payload),
   });
 }
 
@@ -129,13 +130,13 @@ export async function marcarEnviadoModista(
 
 export async function marcarRecibidoModista(
   tareaId: number,
-  motivo?: string,
+  payload: { costoModista: number; motivo?: string },
 ): Promise<TareaOperativa> {
   return apiFetch<TareaOperativa>(
     `/v2/tareas-operativas/${tareaId}/recibir-modista`,
     {
       method: "POST",
-      body: JSON.stringify({ motivo }),
+      body: JSON.stringify(payload),
     },
   );
 }
@@ -185,6 +186,37 @@ export async function actualizarEstadoAgendaMedicion(
       body: JSON.stringify({ estado, observaciones }),
     },
   );
+}
+
+export async function listarTareasLavanderia(params: {
+  tipo: "llevar" | "retirar";
+  lavanderiaId?: number;
+}): Promise<TareaLavanderiaItem[]> {
+  return apiFetch<TareaLavanderiaItem[]>(
+    `/v2/tareas-operativas/lavanderia${buildQueryString({
+      tipo: params.tipo,
+      lavanderiaId: params.lavanderiaId,
+    })}`,
+  );
+}
+
+export async function enviarLavanderiaLote(payload: {
+  ids: number[];
+  lavanderiaId: number;
+}): Promise<void> {
+  await apiFetch<void>(`/v2/tareas-operativas/lote/enviar-lavanderia`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function retirarLavanderiaLote(payload: {
+  ids: number[];
+}): Promise<void> {
+  await apiFetch<void>(`/v2/tareas-operativas/lote/retirar-lavanderia`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function marcarContactoMedicion(

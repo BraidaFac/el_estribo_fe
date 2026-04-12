@@ -40,8 +40,6 @@ export function EnvioModistaReservaModal({
   const [modistas, setModistas] = useState<Modista[]>([]);
   const [loadingList, setLoadingList] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [sacoVa, setSacoVa] = useState(true);
-  const [pantVa, setPantVa] = useState(true);
   const [mismaModista, setMismaModista] = useState(true);
   const [sacoModId, setSacoModId] = useState<string>("");
   const [pantModId, setPantModId] = useState<string>("");
@@ -78,8 +76,6 @@ export function EnvioModistaReservaModal({
   }, [mismaModista, sacoModId]);
 
   const resetForm = () => {
-    setSacoVa(true);
-    setPantVa(true);
     setMismaModista(true);
     const key =
       predeterminadaId != null ? String(predeterminadaId) : sacoModId;
@@ -89,19 +85,19 @@ export function EnvioModistaReservaModal({
 
   const handleGuardar = async () => {
     if (!reservaId) return;
-    if (sacoVa && !sacoModId) {
+    if (!sacoModId) {
       toast.error("Elegí modista para el saco");
       return;
     }
-    if (tienePantalon && pantVa && !pantModId) {
+    if (tienePantalon && !pantModId) {
       toast.error("Elegí modista para el pantalón");
       return;
     }
     const payload: EnviarModistaReservaPayload = {
-      sacoVaAModista: sacoVa,
-      sacoModistaId: sacoVa ? Number(sacoModId) : undefined,
-      pantalonVaAModista: tienePantalon ? pantVa : undefined,
-      pantalonModistaId: tienePantalon && pantVa ? Number(pantModId) : undefined,
+      sacoVaAModista: true,
+      sacoModistaId: Number(sacoModId),
+      pantalonVaAModista: tienePantalon ? true : undefined,
+      pantalonModistaId: tienePantalon ? Number(pantModId) : undefined,
     };
     try {
       setSaving(true);
@@ -139,33 +135,25 @@ export function EnvioModistaReservaModal({
             </div>
           ) : (
             <>
-              <Checkbox isSelected={sacoVa} onValueChange={setSacoVa}>
-                El saco va a modista
-              </Checkbox>
-              {sacoVa ? (
-                <Select
-                  label="Modista (saco)"
-                  selectedKeys={sacoModId ? new Set([sacoModId]) : new Set()}
-                  onSelectionChange={(keys) => {
-                    const k = Array.from(keys)[0];
-                    setSacoModId(k != null ? String(k) : "");
-                  }}
-                >
-                  {modistas.map((m) => (
-                    <SelectItem key={String(m.id)}>{m.nombre}</SelectItem>
-                  ))}
-                </Select>
-              ) : null}
+              <Select
+                label="Modista (saco)"
+                selectedKeys={sacoModId ? new Set([sacoModId]) : new Set()}
+                onSelectionChange={(keys) => {
+                  const k = Array.from(keys)[0];
+                  setSacoModId(k != null ? String(k) : "");
+                }}
+              >
+                {modistas.map((m) => (
+                  <SelectItem key={String(m.id)}>{m.nombre}</SelectItem>
+                ))}
+              </Select>
 
               {tienePantalon ? (
                 <>
-                  <Checkbox isSelected={pantVa} onValueChange={setPantVa}>
-                    El pantalón va a modista
-                  </Checkbox>
                   <Checkbox isSelected={mismaModista} onValueChange={setMismaModista}>
                     Misma modista para pantalón y saco
                   </Checkbox>
-                  {pantVa && !mismaModista ? (
+                  {!mismaModista ? (
                     <Select
                       label="Modista (pantalón)"
                       selectedKeys={pantModId ? new Set([pantModId]) : new Set()}

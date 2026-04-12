@@ -188,6 +188,22 @@ export interface UpdateReservaV2Payload {
   observaciones?: string;
 }
 
+export interface TareaLavanderiaItem {
+  id: number;
+  tipoPrenda: TipoPrenda | null;
+  codigoPrenda: string | null;
+  reservaId: number | null;
+  clienteNombre: string | null;
+  decisionLavado: "LAVANDERIA_EXTERNA" | "LIMPIEZA_LOCAL" | null;
+  proximaReservaFecha: string | null;
+  prioridad: PrioridadTareaOperativa;
+  lavanderiaId: number | null;
+  lavanderiaNombre: string | null;
+  fechaIngresoLavanderia: string | null;
+  fechaRetiroLavanderia: string | null;
+  estado: EstadoTareaOperativa;
+}
+
 export interface TareaOperativa {
   id: number;
   tipoTarea: TipoTareaOperativa;
@@ -245,6 +261,10 @@ export interface MedicionesReservaResponse {
   mediciones: MedicionesReservaJson;
   actualizadoEn: string | null;
   creadoPor: { id: string; name: string } | null;
+  observacionSaco: string | null;
+  observacionPantalon: string | null;
+  observacionGeneral: string | null;
+  sinModista: boolean;
 }
 
 export interface CancelarBloqueoPayload {
