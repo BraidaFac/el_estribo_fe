@@ -74,6 +74,13 @@ export interface Pantalon {
   createdAt?: string;
 }
 
+export interface PrecioHistoricoLavanderia {
+  id: number;
+  precio: number;
+  vigenciaDesde: string;
+  createdAt: string;
+}
+
 export interface Lavanderia {
   id: number;
   nombre: string;
@@ -81,6 +88,7 @@ export interface Lavanderia {
   direccion: string | null;
   predeterminada: boolean;
   activo: boolean;
+  precioActual: number | null;
 }
 
 export interface Modista {

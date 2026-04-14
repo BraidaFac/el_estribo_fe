@@ -27,10 +27,34 @@ export type BiDevolucionesResumen = {
   conCargoAdicional: number;
 };
 
+export type BiLavadosEvolucionPunto = {
+  periodo: string;
+  cantidad: number;
+  costoTotal: number;
+};
+
+export type BiLavadosResumen = {
+  totalLavados: number;
+  costoTotal: number;
+  evolucion: BiLavadosEvolucionPunto[];
+};
+
+export type BiModistasEvolucionPunto = {
+  periodo: string;
+  costoTotal: number;
+};
+
+export type BiModistasResumen = {
+  costoTotal: number;
+  evolucion: BiModistasEvolucionPunto[];
+};
+
 export type BiResponse = {
   generadoEn: string;
   filtros: BiQueryParams;
   evolucionReservas: BiEvolucionPunto[];
   preEntrega: BiPreEntregaResumen;
   devoluciones: BiDevolucionesResumen;
+  lavados: BiLavadosResumen;
+  modistas: BiModistasResumen;
 };

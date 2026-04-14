@@ -11,6 +11,8 @@ import { BiFilterBar } from "./BiFilterBar";
 import { BiKpiCard } from "./BiKpiCard";
 import { DevolucionesChart } from "./DevolucionesChart";
 import { EvolucionReservasChart } from "./EvolucionReservasChart";
+import { LavadosChart } from "./LavadosChart";
+import { ModistasChart } from "./ModistasChart";
 import { PreEntregaChart } from "./PreEntregaChart";
 
 function defaultParams(): BiQueryParams {
@@ -58,8 +60,12 @@ export function BiDashboardPage() {
         </div>
       ) : data ? (
         <>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <BiKpiCard label="Reservas" value={data.evolucionReservas.reduce((s, p) => s + p.totalReservas, 0)} />
+          {/* Fila 1 — métricas de reservas y pre-entrega */}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+            <BiKpiCard
+              label="Reservas"
+              value={data.evolucionReservas.reduce((s, p) => s + p.totalReservas, 0)}
+            />
             <BiKpiCard
               label="Controles aprobados"
               value={data.preEntrega.aprobados}
@@ -70,10 +76,26 @@ export function BiDashboardPage() {
               value={data.preEntrega.rechazados}
               color="danger"
             />
+          </div>
+
+          {/* Fila 2 — devoluciones y costos operativos */}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <BiKpiCard
-              label="Devoluciones con cargo"
-              value={data.devoluciones.conCargoAdicional}
-              color={data.devoluciones.conCargoAdicional > 0 ? "warning" : "default"}
+              label="Devoluciones exitosas"
+              value={data.devoluciones.perfectasCondiciones}
+              color={data.devoluciones.perfectasCondiciones > 0 ? "success" : "default"}
+            />
+            <BiKpiCard
+              label="Total lavados"
+              value={data.lavados.totalLavados}
+            />
+            <BiKpiCard
+              label="Costo lavados ($)"
+              value={Math.round(data.lavados.costoTotal)}
+            />
+            <BiKpiCard
+              label="Costo modistas ($)"
+              value={Math.round(data.modistas.costoTotal)}
             />
           </div>
 
@@ -85,6 +107,17 @@ export function BiDashboardPage() {
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
             <PreEntregaChart resumen={data.preEntrega} />
             <DevolucionesChart resumen={data.devoluciones} />
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <LavadosChart
+              resumen={data.lavados}
+              granularidad={data.filtros.granularidad}
+            />
+            <ModistasChart
+              resumen={data.modistas}
+              granularidad={data.filtros.granularidad}
+            />
           </div>
         </>
       ) : null}
