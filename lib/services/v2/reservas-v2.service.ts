@@ -4,6 +4,7 @@ import type {
   HistorialReservasResponse,
   ReservaDetalleOperativo,
 } from "@/lib/domain/reservas/seguimientoReservas";
+import type { PasoCompletado, RevertirUltimoPasoPayload } from "@/lib/domain/reservas/pasosReserva";
 import {
   CreateReservaV2Payload,
   Disponibilidad,
@@ -157,6 +158,22 @@ export async function guardarMedicionesReserva(
 ): Promise<MedicionesReservaResponse> {
   return apiFetch<MedicionesReservaResponse>(`/v2/reservas/${reservaId}/mediciones`, {
     method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function obtenerPasosCompletados(
+  reservaId: number,
+): Promise<PasoCompletado[]> {
+  return apiFetch<PasoCompletado[]>(`/v2/reservas/${reservaId}/pasos-completados`);
+}
+
+export async function revertirUltimoPaso(
+  reservaId: number,
+  payload: RevertirUltimoPasoPayload,
+): Promise<PasoCompletado[]> {
+  return apiFetch<PasoCompletado[]>(`/v2/reservas/${reservaId}/revertir-ultimo-paso`, {
+    method: "POST",
     body: JSON.stringify(payload),
   });
 }

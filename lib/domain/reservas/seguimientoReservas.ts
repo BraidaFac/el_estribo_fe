@@ -10,7 +10,8 @@ export type TrazabilidadEvento = {
     | "movimiento"
     | "agenda"
     | "control_pre_entrega"
-    | "cliente";
+    | "cliente"
+    | "reversion";
   titulo: string;
   descripcion: string | null;
   fecha: string | null;

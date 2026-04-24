@@ -21,6 +21,8 @@ export function getEstadoControlPreEntregaLabel(
       return "Rechazado";
     case "RESUELTO":
       return "Resuelto";
+    case "REVERTIDO":
+      return "Revertido";
     default:
       return estado;
   }

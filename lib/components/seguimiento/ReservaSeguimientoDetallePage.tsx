@@ -2,6 +2,7 @@
 
 import { MedicionesReservaModal } from "@/lib/components/medidas/MedicionesReservaModal";
 import { ControlPreEntregaVistaModal } from "@/lib/components/seguimiento/ControlPreEntregaVistaModal";
+import { PasosRealizadosTab } from "@/lib/components/seguimiento/PasosRealizadosTab";
 import { RecepcionDevolucionVistaModal } from "@/lib/components/seguimiento/RecepcionDevolucionVistaModal";
 import { resumenLavanderiasReservaDetalle, resumenModistasReservaDetalle } from "@/lib/domain/reservas/asignacionesServicio";
 import {
@@ -21,12 +22,14 @@ import {
   Button,
   Chip,
   Spinner,
+  Tab,
   Table,
   TableBody,
   TableCell,
   TableColumn,
   TableHeader,
   TableRow,
+  Tabs,
 } from "@heroui/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -47,6 +50,8 @@ function labelCategoriaTrazabilidad(c: TrazabilidadEvento["categoria"]): string 
       return "Pre-entrega";
     case "cliente":
       return "Cliente";
+    case "reversion":
+      return "Reversión";
     default:
       return c;
   }
@@ -141,93 +146,106 @@ export function ReservaSeguimientoDetallePage() {
         </div>
       </div>
 
-      <section className="rounded-xl border border-pastel-border bg-pastel-surface p-4">
-        <h2 className="text-lg font-semibold text-pastel-text">Datos generales</h2>
-        <div className="mt-3 grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
-          <p>
-            <span className="text-pastel-text/70">Cliente:</span>{" "}
-            <span className="font-medium text-pastel-text">{reserva.clienteNombre}</span>
-          </p>
-          <p>
-            <span className="text-pastel-text/70">DNI:</span> {reserva.clienteDni}
-          </p>
-          <p>
-            <span className="text-pastel-text/70">Cuenta:</span> {reserva.nombreCuenta ?? "—"}
-          </p>
-          <p>
-            <span className="text-pastel-text/70">Teléfono:</span> {reserva.clienteTelefono ?? "—"}
-          </p>
-          <p>
-            <span className="text-pastel-text/70">Fecha evento / reserva:</span>{" "}
-            {formatApiDateForUi(reserva.fechaReserva)}
-          </p>
-          <p className="flex flex-wrap items-center gap-2">
-            <span className="text-pastel-text/70">Estado:</span>
-            <Chip size="sm" variant="flat">
-              {getEstadoReservaLabel(reserva.estadoReserva)}
-            </Chip>
-          </p>
-          <p>
-            <span className="text-pastel-text/70">Saco:</span> {reserva.saco.codigo} — {reserva.saco.marca}{" "}
-            ({getEstadoUbicacionPrendaLabel(reserva.saco.ubicacionActual)})
-          </p>
-          <p>
-            <span className="text-pastel-text/70">Pantalón:</span>{" "}
-            {reserva.pantalon
-              ? `${reserva.pantalon.codigo} — ${reserva.pantalon.marca} (${getEstadoUbicacionPrendaLabel(reserva.pantalon.ubicacionActual)})`
-              : "Sin pantalón"}
-          </p>
-          <p>
-            <span className="text-pastel-text/70">Retiro cliente:</span>{" "}
-            {reserva.clienteRetiroAt ? formatApiDateTimeForUi(reserva.clienteRetiroAt) : "—"}
-          </p>
-          <p>
-            <span className="text-pastel-text/70">Devolución cliente:</span>{" "}
-            {reserva.clienteDevolvioAt ? formatApiDateTimeForUi(reserva.clienteDevolvioAt) : "—"}
-          </p>
-        </div>
-        <p className="mt-3 whitespace-pre-wrap rounded-lg bg-pastel-soft/80 p-3 text-sm text-pastel-text">
-          <span className="font-medium text-pastel-text/80">Observaciones:</span>{" "}
-          {reserva.observaciones?.trim() ? reserva.observaciones : "Sin observaciones"}
-        </p>
-        <div className="mt-3 whitespace-pre-wrap text-sm">
-          <p className="font-medium text-pastel-text/80">Lavandería (saco / pantalón)</p>
-          <p className="text-pastel-text">{resumenLavanderiasReservaDetalle(reserva)}</p>
-        </div>
-        <div className="mt-2 whitespace-pre-wrap text-sm">
-          <p className="font-medium text-pastel-text/80">Modista (saco / pantalón)</p>
-          <p className="text-pastel-text">{resumenModistasReservaDetalle(reserva)}</p>
-        </div>
-      </section>
+      <Tabs aria-label="Secciones de la reserva" variant="underlined" color="secondary">
+        <Tab key="informacion" title="Información">
+          <section className="rounded-xl border border-pastel-border bg-pastel-surface p-4">
+            <h2 className="text-lg font-semibold text-pastel-text">Datos generales</h2>
+            <div className="mt-3 grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
+              <p>
+                <span className="text-pastel-text/70">Cliente:</span>{" "}
+                <span className="font-medium text-pastel-text">{reserva.clienteNombre}</span>
+              </p>
+              <p>
+                <span className="text-pastel-text/70">DNI:</span> {reserva.clienteDni}
+              </p>
+              <p>
+                <span className="text-pastel-text/70">Cuenta:</span> {reserva.nombreCuenta ?? "—"}
+              </p>
+              <p>
+                <span className="text-pastel-text/70">Teléfono:</span> {reserva.clienteTelefono ?? "—"}
+              </p>
+              <p>
+                <span className="text-pastel-text/70">Fecha evento / reserva:</span>{" "}
+                {formatApiDateForUi(reserva.fechaReserva)}
+              </p>
+              <p className="flex flex-wrap items-center gap-2">
+                <span className="text-pastel-text/70">Estado:</span>
+                <Chip size="sm" variant="flat">
+                  {getEstadoReservaLabel(reserva.estadoReserva)}
+                </Chip>
+              </p>
+              <p>
+                <span className="text-pastel-text/70">Saco:</span> {reserva.saco.codigo} — {reserva.saco.marca}{" "}
+                ({getEstadoUbicacionPrendaLabel(reserva.saco.ubicacionActual)})
+              </p>
+              <p>
+                <span className="text-pastel-text/70">Pantalón:</span>{" "}
+                {reserva.pantalon
+                  ? `${reserva.pantalon.codigo} — ${reserva.pantalon.marca} (${getEstadoUbicacionPrendaLabel(reserva.pantalon.ubicacionActual)})`
+                  : "Sin pantalón"}
+              </p>
+              <p>
+                <span className="text-pastel-text/70">Retiro cliente:</span>{" "}
+                {reserva.clienteRetiroAt ? formatApiDateTimeForUi(reserva.clienteRetiroAt) : "—"}
+              </p>
+              <p>
+                <span className="text-pastel-text/70">Devolución cliente:</span>{" "}
+                {reserva.clienteDevolvioAt ? formatApiDateTimeForUi(reserva.clienteDevolvioAt) : "—"}
+              </p>
+            </div>
+            <p className="mt-3 whitespace-pre-wrap rounded-lg bg-pastel-soft/80 p-3 text-sm text-pastel-text">
+              <span className="font-medium text-pastel-text/80">Observaciones:</span>{" "}
+              {reserva.observaciones?.trim() ? reserva.observaciones : "Sin observaciones"}
+            </p>
+            <div className="mt-3 whitespace-pre-wrap text-sm">
+              <p className="font-medium text-pastel-text/80">Lavandería (saco / pantalón)</p>
+              <p className="text-pastel-text">{resumenLavanderiasReservaDetalle(reserva)}</p>
+            </div>
+            <div className="mt-2 whitespace-pre-wrap text-sm">
+              <p className="font-medium text-pastel-text/80">Modista (saco / pantalón)</p>
+              <p className="text-pastel-text">{resumenModistasReservaDetalle(reserva)}</p>
+            </div>
+          </section>
 
-      <section className="rounded-xl border border-pastel-border bg-pastel-surface p-4">
-        <h2 className="text-lg font-semibold text-pastel-text">Trazabilidad operativa</h2>
-        <p className="mt-1 text-xs text-pastel-text/75">
-          Eventos derivados del sistema (fechas según registro en base de datos).
-        </p>
-        <Table aria-label="Trazabilidad" className="mt-3">
-          <TableHeader>
-            <TableColumn className={TABLE_HEADER_CLASS}>Tipo</TableColumn>
-            <TableColumn className={TABLE_HEADER_CLASS}>Evento</TableColumn>
-            <TableColumn className={TABLE_HEADER_CLASS}>Detalle</TableColumn>
-            <TableColumn className={TABLE_HEADER_CLASS}>Fecha</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent="Sin eventos de trazabilidad.">
-            {trazabilidad.map((t) => (
-              <TableRow key={t.id}>
-                <TableCell>{labelCategoriaTrazabilidad(t.categoria)}</TableCell>
-                <TableCell className="max-w-[14rem]">{t.titulo}</TableCell>
-                <TableCell className="max-w-md whitespace-pre-wrap text-xs">
-                  {t.descripcion ? formatIsoDatesInText(t.descripcion) : "—"}
-                </TableCell>
-                <TableCell className="whitespace-nowrap text-xs">
-                  {formatTrazabilidadFecha(t.fecha)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </section>
+          <section className="mt-4 rounded-xl border border-pastel-border bg-pastel-surface p-4">
+            <h2 className="text-lg font-semibold text-pastel-text">Trazabilidad operativa</h2>
+            <p className="mt-1 text-xs text-pastel-text/75">
+              Eventos derivados del sistema (fechas según registro en base de datos).
+            </p>
+            <Table aria-label="Trazabilidad" className="mt-3">
+              <TableHeader>
+                <TableColumn className={TABLE_HEADER_CLASS}>Tipo</TableColumn>
+                <TableColumn className={TABLE_HEADER_CLASS}>Evento</TableColumn>
+                <TableColumn className={TABLE_HEADER_CLASS}>Detalle</TableColumn>
+                <TableColumn className={TABLE_HEADER_CLASS}>Fecha</TableColumn>
+              </TableHeader>
+              <TableBody emptyContent="Sin eventos de trazabilidad.">
+                {trazabilidad.map((t) => (
+                  <TableRow key={t.id}>
+                    <TableCell>{labelCategoriaTrazabilidad(t.categoria)}</TableCell>
+                    <TableCell className="max-w-[14rem]">{t.titulo}</TableCell>
+                    <TableCell className="max-w-md whitespace-pre-wrap text-xs">
+                      {t.descripcion ? formatIsoDatesInText(t.descripcion) : "—"}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-xs">
+                      {formatTrazabilidadFecha(t.fecha)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </section>
+        </Tab>
+
+        <Tab key="pasos" title="Pasos realizados">
+          <section className="rounded-xl border border-pastel-border bg-pastel-surface p-4">
+            <h2 className="text-lg font-semibold text-pastel-text">Pasos realizados</h2>
+            <div className="mt-3">
+              <PasosRealizadosTab reservaId={reservaId} onReversion={load} />
+            </div>
+          </section>
+        </Tab>
+      </Tabs>
 
       <MedicionesReservaModal
         isOpen={openMediciones}

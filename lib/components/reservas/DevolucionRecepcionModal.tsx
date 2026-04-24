@@ -332,7 +332,7 @@ export function DevolucionRecepcionModal({
 
           <section className="rounded-xl border border-pastel-border bg-pastel-soft/80 p-3">
             <h3 className="mb-2 text-sm font-semibold text-pastel-text">
-              B. Destino de lavado
+              B. Recomendación de lavado
             </h3>
             <div className="space-y-3">
               <div>

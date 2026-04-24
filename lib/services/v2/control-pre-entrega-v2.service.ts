@@ -5,8 +5,17 @@ import type {
 } from "@/lib/domain/control-pre-entrega/types";
 import { apiFetch } from "@/lib/services/http";
 
-export async function fetchPlanillaPrepararEntrega(): Promise<PlanillaPrepararFila[]> {
-  return apiFetch<PlanillaPrepararFila[]>("/v2/control-pre-entrega/planilla-preparar");
+export async function fetchPlanillaPrepararEntrega(
+  desde?: string,
+  hasta?: string,
+): Promise<PlanillaPrepararFila[]> {
+  const params = new URLSearchParams();
+  if (desde) params.set("desde", desde);
+  if (hasta) params.set("hasta", hasta);
+  const qs = params.toString();
+  return apiFetch<PlanillaPrepararFila[]>(
+    `/v2/control-pre-entrega/planilla-preparar${qs ? `?${qs}` : ""}`,
+  );
 }
 
 export async function fetchRechazadosPreEntrega(): Promise<RechazoPreEntregaFila[]> {

@@ -4,6 +4,7 @@ import ConfirmModal, {
   type ConfirmModalRef,
 } from "@/lib/components/ConfirmModal";
 import { ControlPreEntregaModal } from "@/lib/components/planillas/ControlPreEntregaModal";
+import { ApiDateField } from "@/lib/components/ui/ApiDateField";
 import type { PlanillaPrepararFila } from "@/lib/domain/control-pre-entrega/types";
 import { fetchPlanillaPrepararEntrega } from "@/lib/services/v2/control-pre-entrega-v2.service";
 import { getUserFacingErrorMessage } from "@/lib/utils/apiErrorMessage";
@@ -20,8 +21,17 @@ import {
   TableHeader,
   TableRow,
 } from "@heroui/react";
+import { addMonths, format } from "date-fns";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+
+function defaultDesdeHasta() {
+  const hoy = new Date();
+  return {
+    desde: format(hoy, "yyyy-MM-dd"),
+    hasta: format(addMonths(hoy, 1), "yyyy-MM-dd"),
+  };
+}
 
 function rowPriorityClass(fila: PlanillaPrepararFila): string {
   const { diasHastaReserva, tieneTareasPendientes } = fila;
@@ -40,11 +50,19 @@ export function PlanillaPrepararEntregaPage() {
   const [modalReservaId, setModalReservaId] = useState<number | null>(null);
   const [modalCliente, setModalCliente] = useState("");
   const confirmRef = useRef<ConfirmModalRef>(null);
+  const [desde, setDesde] = useState(() => defaultDesdeHasta().desde);
+  const [hasta, setHasta] = useState(() => defaultDesdeHasta().hasta);
 
-  const load = useCallback(async () => {
+  const canSearch = !!desde && !!hasta;
+
+  const load = useCallback(async (desdeVal?: string, hastaVal?: string) => {
+    if (desdeVal && hastaVal && hastaVal < desdeVal) {
+      toast.error("La fecha de hasta no puede ser anterior a la fecha de desde");
+      return;
+    }
     try {
       setLoading(true);
-      const data = await fetchPlanillaPrepararEntrega();
+      const data = await fetchPlanillaPrepararEntrega(desdeVal, hastaVal);
       setFilas(data);
     } catch (e) {
       toast.error(getUserFacingErrorMessage(e));
@@ -54,8 +72,9 @@ export function PlanillaPrepararEntregaPage() {
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void load(desde, hasta);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo montaje
+  }, []);
 
   const modalNumero = useMemo(() => {
     if (modalReservaId == null) return "";
@@ -105,15 +124,18 @@ export function PlanillaPrepararEntregaPage() {
         <h1 className="text-2xl font-semibold text-pastel-text">
           Preparar para entrega
         </h1>
-        <Button
-          size="sm"
-          variant="flat"
-          className="mt-3"
-          onPress={() => void load()}
-          isDisabled={loading}
-        >
-          Actualizar
-        </Button>
+        <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <ApiDateField label="Desde" value={desde} onChange={setDesde} />
+          <ApiDateField label="Hasta" value={hasta} onChange={setHasta} />
+          <Button
+            color="primary"
+            className="self-end"
+            isDisabled={!canSearch || loading}
+            onPress={() => void load(desde, hasta)}
+          >
+            Actualizar listado
+          </Button>
+        </div>
       </div>
 
       {loading ? (

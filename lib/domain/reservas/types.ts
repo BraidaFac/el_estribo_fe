@@ -10,7 +10,7 @@ export type EstadoReserva =
   | "COMPLETADA"
   | "CANCELADA";
 
-export type EstadoControlPreEntrega = "APROBADO" | "RECHAZADO" | "RESUELTO";
+export type EstadoControlPreEntrega = "APROBADO" | "RECHAZADO" | "RESUELTO" | "REVERTIDO";
 
 export type EstadoUbicacionPrenda =
   | "TIENDA"
