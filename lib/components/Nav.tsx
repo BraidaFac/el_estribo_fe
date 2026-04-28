@@ -53,18 +53,18 @@ const ADMIN_PRIMARY_NAV_ITEMS: NavItem[] = [
  */
 const PLANILLAS_NAV_GROUPS: NavGroup[] = [
   {
-    key: "lavanderia",
-    label: "Lavandería",
+    key: "medicion",
+    label: "Medición",
     items: [
       {
-        key: "llevar",
-        label: "Llevar a lavandería",
-        href: "/planillas/llevar",
+        key: "contactar-medicion",
+        label: "Contactar medición",
+        href: "/planillas/contactar-medicion",
       },
       {
-        key: "devolver",
-        label: "Retirar de lavandería",
-        href: "/planillas/devolver",
+        key: "agenda-mediciones",
+        label: "Agenda de mediciones",
+        href: "/planillas/agenda-mediciones",
       },
     ],
   },
@@ -85,6 +85,22 @@ const PLANILLAS_NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    key: "local",
+    label: "Local",
+    items: [
+      {
+        key: "preparar-entrega",
+        label: "Preparar para entrega",
+        href: "/planillas/local/preparar-entrega",
+      },
+      {
+        key: "rechazados-pre-entrega",
+        label: "Rechazados pre-entrega",
+        href: "/planillas/local/rechazados-pre-entrega",
+      },
+    ],
+  },
+  {
     key: "clientes",
     label: "Clientes",
     items: [
@@ -101,34 +117,18 @@ const PLANILLAS_NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    key: "medicion",
-    label: "Medición",
+    key: "lavanderia",
+    label: "Lavandería",
     items: [
       {
-        key: "contactar-medicion",
-        label: "Contactar medición",
-        href: "/planillas/contactar-medicion",
+        key: "llevar",
+        label: "Llevar a lavandería",
+        href: "/planillas/llevar",
       },
       {
-        key: "agenda-mediciones",
-        label: "Agenda de mediciones",
-        href: "/planillas/agenda-mediciones",
-      },
-    ],
-  },
-  {
-    key: "local",
-    label: "Local",
-    items: [
-      {
-        key: "preparar-entrega",
-        label: "Preparar para entrega",
-        href: "/planillas/local/preparar-entrega",
-      },
-      {
-        key: "rechazados-pre-entrega",
-        label: "Rechazados pre-entrega",
-        href: "/planillas/local/rechazados-pre-entrega",
+        key: "devolver",
+        label: "Retirar de lavandería",
+        href: "/planillas/devolver",
       },
     ],
   },
