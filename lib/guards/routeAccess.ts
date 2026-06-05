@@ -1,7 +1,7 @@
 const PUBLIC_ROUTES = ["/login"];
 
 /** Rutas que requieren rol ADMIN. */
-const ADMIN_ONLY_ROUTES = ["/analytics"];
+const ADMIN_ONLY_ROUTES = ["/analytics", "/configuracion/empleados"];
 
 export function normalizeRole(role?: string): string {
   return (role || "").toUpperCase();

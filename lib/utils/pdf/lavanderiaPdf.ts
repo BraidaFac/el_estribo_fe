@@ -27,6 +27,21 @@ function fechaSugeridaEntrega(proximaReservaFecha: string | null): string {
   );
 }
 
+async function loadImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 export async function generarPdfLlevarLavanderia(
   tareas: TareaLavanderiaItem[],
   lavanderiaNombre: string,
@@ -37,16 +52,36 @@ export async function generarPdfLlevarLavanderia(
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
+  const logoBase64 = await loadImageAsBase64("/icon.png");
+
+  let cursorY = 14;
+
+  if (logoBase64) {
+    // logo ancho 60mm, alto proporcional (imagen ~6:1 aprox) → ~10mm alto
+    doc.addImage(logoBase64, "PNG", 14, cursorY, 60, 10);
+    cursorY += 16;
+  } else {
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("El Estribo", 14, cursorY + 6);
+    doc.setFont("helvetica", "normal");
+    cursorY += 14;
+  }
+
   doc.setFontSize(16);
-  doc.text("Planilla Envío Lavandería", 14, 18);
+  doc.text("Planilla Envío Lavandería", 14, cursorY);
+  cursorY += 9;
 
   doc.setFontSize(11);
-  doc.text(`Lavandería: ${lavanderiaNombre}`, 14, 27);
-  doc.text(`Fecha: ${formatApiDateForUi(fechaEnvio)}`, 14, 34);
-  doc.text(`Cantidad de prendas: ${tareas.length}`, 14, 41);
+  doc.text(`Lavandería: ${lavanderiaNombre}`, 14, cursorY);
+  cursorY += 7;
+  doc.text(`Fecha: ${formatApiDateForUi(fechaEnvio)}`, 14, cursorY);
+  cursorY += 7;
+  doc.text(`Cantidad de prendas: ${tareas.length}`, 14, cursorY);
+  cursorY += 7;
 
   autoTable(doc, {
-    startY: 48,
+    startY: cursorY,
     head: [
       [
         "Tipo",
